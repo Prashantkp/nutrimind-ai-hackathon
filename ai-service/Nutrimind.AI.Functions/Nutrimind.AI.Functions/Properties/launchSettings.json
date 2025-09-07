@@ -1,0 +1,9 @@
+{
+  "profiles": {
+    "Nutrimind.AI.Functions": {
+      "commandName": "Project",
+      "commandLineArgs": "--port 7034",
+      "launchBrowser": false
+    }
+  }
+}
