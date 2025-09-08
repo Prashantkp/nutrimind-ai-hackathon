@@ -1,0 +1,46 @@
+{
+  "version": "2.0",
+  "logging": {
+    "applicationInsights": {
+      "samplingSettings": {
+        "isEnabled": true,
+        "excludedTypes": "Request"
+      },
+      "enableLiveMetricsFilters": true
+    }
+  },
+  "extensionBundle": {
+    "id": "Microsoft.Azure.Functions.ExtensionBundle",
+    "version": "[3.*, 4.0.0)"
+  },
+  "functionTimeout": "00:10:00",
+  "healthMonitor": {
+    "enabled": true,
+    "healthCheckInterval": "00:00:10",
+    "healthCheckWindow": "00:02:00",
+    "healthCheckThreshold": 6,
+    "counterThreshold": 0.80
+  },
+  "retry": {
+    "strategy": "fixedDelay",
+    "maxRetryCount": 3,
+    "delayInterval": "00:00:05"
+  },
+  "durableTask": {
+    "maxConcurrentActivityFunctions": 10,
+    "maxConcurrentOrchestratorFunctions": 10,
+    "extendedSessionsEnabled": false,
+    "storageProvider": {
+      "connectionStringName": "AzureWebJobsStorage",
+      "controlQueueBatchSize": 32,
+      "controlQueueBufferThreshold": 256,
+      "controlQueueVisibilityTimeout": "00:05:00",
+      "maxQueuePollingInterval": "00:00:30",
+      "partitionCount": 4,
+      "trackingStoreConnectionStringName": "AzureWebJobsStorage",
+      "trackingStoreNamePrefix": "DurableTask",
+      "useLegacyPartitioning": false,
+      "useTablePartitionManagement": true
+    }
+  }
+}
