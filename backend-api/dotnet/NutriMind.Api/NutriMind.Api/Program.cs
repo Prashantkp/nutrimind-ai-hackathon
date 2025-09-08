@@ -15,7 +15,7 @@ builder.Services.AddHttpClient();
 
 // Add Entity Framework
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") 
-    ?? "Server=sqlsrv-nutrimind-ai-eastus2.database.windows.net;Database=sqldb-nutrimind-ai;User Id=nutrimind-admin;Password=YourPasswordHere;Encrypt=true;TrustServerCertificate=false;Connection Timeout=30;";
+    ?? "Server=sqlsrv-nutrimind-ai-eastus2.database.windows.net;Database=sqldb-nutrimind-ai;User Id=nutrimind-admin;Password=Hackathon@2025;Encrypt=true;TrustServerCertificate=false;Connection Timeout=30;";
 
 builder.Services.AddDbContext<NutriMindDbContext>(options =>
     options.UseSqlServer(connectionString));

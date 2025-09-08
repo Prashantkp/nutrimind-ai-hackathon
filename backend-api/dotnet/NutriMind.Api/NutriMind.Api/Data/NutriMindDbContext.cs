@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using NutriMind.Api.Models;
+using Newtonsoft.Json;
 
 namespace NutriMind.Api.Data
 {
@@ -81,6 +82,12 @@ namespace NutriMind.Api.Data
                     cs.OwnsOne(s => s.WalmartGrocery);
                     cs.OwnsOne(s => s.Kroger);
                 });
+
+                // Store UserPreferences as JSON to avoid complex nested owned entity issues
+                entity.Property(e => e.Preferences)
+                    .HasConversion(
+                        v => v == null ? null : JsonConvert.SerializeObject(v),
+                        v => string.IsNullOrEmpty(v) ? null : JsonConvert.DeserializeObject<UserPreferences>(v));
 
                 entity.HasIndex(e => e.UserId).IsUnique();
                 entity.HasIndex(e => e.Email).IsUnique();
