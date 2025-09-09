@@ -26,6 +26,33 @@
     "maxRetryCount": 3,
     "delayInterval": "00:00:05"
   },
+  "cors": {
+    "supportCredentials": false,
+    "allowedOrigins": [
+      "http://localhost:4200",
+      "http://127.0.0.1:4200"
+    ],
+    "allowedMethods": [
+      "GET",
+      "POST",
+      "PUT",
+      "DELETE",
+      "OPTIONS"
+    ],
+    "allowedHeaders": [
+      "Content-Type",
+      "Authorization",
+      "Accept",
+      "Origin",
+      "User-Agent",
+      "DNT",
+      "Cache-Control",
+      "X-Mx-ReqToken",
+      "Keep-Alive",
+      "X-Requested-With",
+      "If-Modified-Since"
+    ]
+  },
   "durableTask": {
     "maxConcurrentActivityFunctions": 10,
     "maxConcurrentOrchestratorFunctions": 10,

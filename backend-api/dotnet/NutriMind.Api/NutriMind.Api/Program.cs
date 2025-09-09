@@ -10,6 +10,18 @@ var builder = FunctionsApplication.CreateBuilder(args);
 
 builder.ConfigureFunctionsWebApplication();
 
+// Add CORS services
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowLocalhost", policy =>
+    {
+        policy.WithOrigins("http://localhost:4200", "http://127.0.0.1:4200")
+              .AllowAnyMethod()
+              .AllowAnyHeader()
+              .AllowCredentials();
+    });
+});
+
 // Add services to the container
 builder.Services.AddHttpClient();
 
@@ -38,6 +50,9 @@ builder.Services.AddScoped<IIntegrationService, IntegrationService>();
 //     .ConfigureFunctionsApplicationInsights();
 
 var app = builder.Build();
+
+// Use CORS
+///app.UseCors("AllowLocalhost");
 
 // Auto-create database and tables if they don't exist
 using (var scope = app.Services.CreateScope())

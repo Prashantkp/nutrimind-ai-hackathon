@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
+import { environment } from '../../../environments/environment';
 import { 
   User, 
   UserPreferences, 
@@ -12,7 +13,7 @@ import {
   providedIn: 'root'
 })
 export class UserService {
-  private readonly API_BASE_URL = 'https://nutrimind-api-eastus2.azurewebsites.net/api';
+  private readonly API_BASE_URL = environment.apiUrl;
 
   constructor(private http: HttpClient) {}
 

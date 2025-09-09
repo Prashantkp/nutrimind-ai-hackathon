@@ -39,6 +39,10 @@ export class LoginComponent implements OnInit {
   }
 
   onSubmit(): void {
+    console.log('Login form submitted');
+    console.log('Form valid:', this.loginForm.valid);
+    console.log('Form values:', this.loginForm.value);
+    
     if (this.loginForm.valid && !this.isLoading) {
       this.isLoading = true;
       
@@ -46,9 +50,12 @@ export class LoginComponent implements OnInit {
         email: this.loginForm.get('email')?.value,
         password: this.loginForm.get('password')?.value
       };
+      
+      console.log('Attempting login with credentials:', credentials);
 
       this.authService.login(credentials).subscribe({
         next: (response) => {
+          console.log('Login successful:', response);
           this.snackBar.open('Welcome back to NutriMind! 🍽️', 'Close', {
             duration: 3000,
             horizontalPosition: 'right',
@@ -58,6 +65,8 @@ export class LoginComponent implements OnInit {
           this.router.navigate([this.returnUrl]);
         },
         error: (error) => {
+          console.error('Login failed:', error);
+          console.error('Error details:', error.error);
           this.isLoading = false;
           const errorMessage = error.error?.message || 'Login failed. Please check your credentials.';
           this.snackBar.open(errorMessage, 'Close', {

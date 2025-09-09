@@ -5,6 +5,9 @@ import { HttpClientModule, HTTP_INTERCEPTORS } from '@angular/common/http';
 import { ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { FlexLayoutModule } from '@angular/flex-layout';
 
+// Interceptors
+import { LoggingInterceptor } from './core/interceptors/logging.interceptor';
+
 // Angular Material Modules
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatButtonModule } from '@angular/material/button';
@@ -102,7 +105,11 @@ import { AuthInterceptor } from './core/interceptors/auth.interceptor';
     })
   ],
   providers: [
-    // Removed HTTP_INTERCEPTORS temporarily
+    {
+      provide: HTTP_INTERCEPTORS,
+      useClass: LoggingInterceptor,
+      multi: true
+    }
   ],
   bootstrap: [AppComponent]
 })

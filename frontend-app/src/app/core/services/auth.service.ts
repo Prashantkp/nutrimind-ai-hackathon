@@ -1,8 +1,9 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { map, tap } from 'rxjs/operators';
 import { Router } from '@angular/router';
+import { environment } from '../../../environments/environment';
 import { 
   LoginRequest, 
   RegisterRequest, 
@@ -15,7 +16,7 @@ import {
   providedIn: 'root'
 })
 export class AuthService {
-  private readonly API_BASE_URL = 'https://nutrimind-api-eastus2.azurewebsites.net/api';
+  private readonly API_BASE_URL = environment.apiUrl;
   private readonly TOKEN_KEY = 'nutrimind_token';
   private readonly REFRESH_TOKEN_KEY = 'nutrimind_refresh_token';
   private readonly USER_KEY = 'nutrimind_user';
@@ -47,12 +48,29 @@ export class AuthService {
   }
 
   login(credentials: LoginRequest): Observable<AuthResponse> {
+    console.log('AuthService: Attempting login with:', credentials);
+    console.log('AuthService: API URL:', `${this.API_BASE_URL}/auth/login`);
+    
+    const headers = new HttpHeaders({
+      'Content-Type': 'application/json',
+      'Accept': 'application/json'
+    });
+    
     return this.http.post<ApiResponse<AuthResponse>>(
       `${this.API_BASE_URL}/auth/login`, 
-      credentials
+      credentials,
+      { headers: headers }
     ).pipe(
-      map(response => response.data!),
+      map(response => {
+        console.log('AuthService: Raw response from API:', response);
+        // Check if response has data property
+        if (!response.data) {
+          throw new Error('No data in response: ' + JSON.stringify(response));
+        }
+        return response.data!;
+      }),
       tap(authResponse => {
+        console.log('AuthService: Processed auth response:', authResponse);
         this.setAuthData(authResponse);
         this.currentUserSubject.next(authResponse.user);
         this.isAuthenticatedSubject.next(true);
