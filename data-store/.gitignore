@@ -1,0 +1,65 @@
+# ===============================================
+# Data Store .gitignore
+# ===============================================
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+*.db3
+*.mdb
+*.accdb
+
+# Database backups
+*.bak
+*.backup
+*.sql.backup
+
+# MongoDB data
+data/
+db/
+
+# Redis data
+dump.rdb
+appendonly.aof
+
+# PostgreSQL
+*.pgdata
+
+# MySQL
+*.sql
+mysql-data/
+
+# SQL Server
+*.mdf
+*.ldf
+*.ndf
+
+# Configuration files with sensitive data
+*.conf
+*.config
+database.json
+connection-strings.json
+
+# Migration files (keep schema, not data)
+migrations/data/
+seed-data/
+
+# Logs
+*.log
+logs/
+
+# Temporary files
+temp/
+tmp/
+cache/
+
+# Docker volumes
+docker-data/
+volumes/
+
+# Environment specific configs
+.env
+.env.local
+.env.production
+appsettings.*.json

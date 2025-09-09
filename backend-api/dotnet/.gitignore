@@ -262,3 +262,59 @@ paket-files/
 # Python Tools for Visual Studio (PTVS)
 __pycache__/
 *.pyc
+
+# Additional .NET Core / 5+ specific files
+appsettings.Development.json
+appsettings.Local.json
+appsettings.Staging.json
+secrets.json
+
+# Entity Framework Migrations (keep structure, ignore data)
+**/Migrations/**/2*.cs
+**/Migrations/**/*_Initial.cs
+
+# Docker files (keep dockerfile, ignore build outputs)
+**/obj/Docker/
+**/bin/Docker/
+
+# Azure Functions specific
+local.settings.json
+.azure/
+.func/
+
+# Swagger/OpenAPI generated files
+**/swagger.json
+**/swagger.yaml
+
+# Performance and profiling
+*.psess
+*.vsp
+*.vspx
+*.sap
+
+# Test results and coverage
+TestResults/
+*.trx
+*.coverage
+*.coveragexml
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+*.db3
+
+# Log files specific to application
+Logs/
+logs/
+*.log
+
+# Temporary ASP.NET files
+**/App_Data/Temp/
+**/Temp/
+
+# IIS Express
+**/.vs/config/applicationhost.config
+
+# User secrets
+**/Properties/launchSettings.json
