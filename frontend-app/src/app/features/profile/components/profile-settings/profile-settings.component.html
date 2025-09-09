@@ -1,0 +1,293 @@
+<!-- Loading Overlay -->
+<div class="loading-overlay" *ngIf="isLoading">
+  <app-loading size="large" message="Loading your profile..."></app-loading>
+</div>
+
+<!-- Main Container -->
+<div class="profile-settings" *ngIf="!isLoading && currentUser">
+  <!-- Header -->
+  <div class="settings-header">
+    <div class="header-content">
+      <h1>Profile Settings</h1>
+      <p class="subtitle">Manage your account and preferences</p>
+    </div>
+    
+    <div class="header-actions">
+      <button mat-raised-button 
+              color="primary" 
+              (click)="savePreferences()"
+              [disabled]="isSaving">
+        <mat-icon *ngIf="!isSaving">save</mat-icon>
+        <mat-progress-spinner *ngIf="isSaving" diameter="20"></mat-progress-spinner>
+        {{ isSaving ? 'Saving...' : 'Save Changes' }}
+      </button>
+    </div>
+  </div>
+
+  <!-- Settings Tabs -->
+  <mat-tab-group class="settings-tabs" animationDuration="300ms">
+    
+    <!-- Personal Information Tab -->
+    <mat-tab label="Personal Info">
+      <div class="tab-content">
+        <form [formGroup]="profileForm" class="profile-form">
+          
+          <!-- Profile Picture Section -->
+          <mat-card class="profile-picture-card">
+            <div class="picture-section">
+              <div class="avatar-container">
+                <div class="user-avatar">
+                  <mat-icon class="default-avatar-icon">person</mat-icon>
+                </div>
+              </div>
+              <div class="picture-info">
+                <h3>{{ currentUser.firstName }} {{ currentUser.lastName }}</h3>
+                <p class="user-email">{{ currentUser.email }}</p>
+              </div>
+            </div>
+          </mat-card>
+
+          <!-- Basic Information -->
+          <mat-card class="form-card">
+            <mat-card-header>
+              <mat-card-title>Basic Information</mat-card-title>
+            </mat-card-header>
+            <mat-card-content>
+              <div class="form-grid">
+                <mat-form-field appearance="outline">
+                  <mat-label>First Name</mat-label>
+                  <input matInput formControlName="firstName" required>
+                </mat-form-field>
+
+                <mat-form-field appearance="outline">
+                  <mat-label>Last Name</mat-label>
+                  <input matInput formControlName="lastName" required>
+                </mat-form-field>
+
+                <mat-form-field appearance="outline">
+                  <mat-label>Email</mat-label>
+                  <input matInput formControlName="email" type="email" required>
+                </mat-form-field>
+              </div>
+            </mat-card-content>
+          </mat-card>
+        </form>
+      </div>
+    </mat-tab>
+
+    <!-- Dietary Preferences Tab -->
+    <mat-tab label="Dietary Preferences">
+      <div class="tab-content">
+        <form [formGroup]="preferencesForm" class="preferences-form">
+          
+          <!-- Dietary Restrictions -->
+          <mat-card class="form-card">
+            <mat-card-header>
+              <mat-card-title>Dietary Restrictions</mat-card-title>
+              <mat-card-subtitle>Select any dietary restrictions you follow</mat-card-subtitle>
+            </mat-card-header>
+            <mat-card-content>
+              <div class="checkbox-grid">
+                <mat-checkbox 
+                  *ngFor="let restriction of dietaryRestrictions">
+                  {{ restriction }}
+                </mat-checkbox>
+              </div>
+            </mat-card-content>
+          </mat-card>
+
+          <!-- Allergies -->
+          <mat-card class="form-card">
+            <mat-card-header>
+              <mat-card-title>Allergies</mat-card-title>
+              <mat-card-subtitle>List any food allergies you have</mat-card-subtitle>
+            </mat-card-header>
+            <mat-card-content>
+              <div class="checkbox-grid">
+                <mat-checkbox 
+                  *ngFor="let allergy of commonAllergies">
+                  {{ allergy }}
+                </mat-checkbox>
+              </div>
+              
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Other allergies (comma-separated)</mat-label>
+                <input matInput formControlName="otherAllergies" placeholder="e.g., sesame, shellfish">
+              </mat-form-field>
+            </mat-card-content>
+          </mat-card>
+        </form>
+      </div>
+    </mat-tab>
+
+    <!-- Health & Fitness Tab -->
+    <mat-tab label="Health & Fitness">
+      <div class="tab-content">
+        <form [formGroup]="preferencesForm" class="health-form">
+          
+          <!-- Activity Level -->
+          <mat-card class="form-card">
+            <mat-card-header>
+              <mat-card-title>Activity Level</mat-card-title>
+              <mat-card-subtitle>This helps us calculate your daily calorie needs</mat-card-subtitle>
+            </mat-card-header>
+            <mat-card-content>
+              <mat-radio-group formControlName="activityLevel" class="activity-radio-group">
+                <mat-radio-button 
+                  *ngFor="let level of activityLevels" 
+                  [value]="level.value"
+                  class="activity-option">
+                  <div class="activity-info">
+                    <strong>{{ level.label }}</strong>
+                    <small>{{ level.description }}</small>
+                  </div>
+                </mat-radio-button>
+              </mat-radio-group>
+            </mat-card-content>
+          </mat-card>
+
+          <!-- Health Goals -->
+          <mat-card class="form-card">
+            <mat-card-header>
+              <mat-card-title>Health Goals</mat-card-title>
+              <mat-card-subtitle>What are you trying to achieve?</mat-card-subtitle>
+            </mat-card-header>
+            <mat-card-content>
+              <div class="checkbox-grid">
+                <mat-checkbox 
+                  *ngFor="let goal of healthGoalOptions">
+                  {{ goal }}
+                </mat-checkbox>
+              </div>
+            </mat-card-content>
+          </mat-card>
+
+          <!-- Macro Goals -->
+          <mat-card class="form-card">
+            <mat-card-header>
+              <mat-card-title>Daily Nutrition Goals</mat-card-title>
+              <mat-card-subtitle>Set your daily macro targets</mat-card-subtitle>
+            </mat-card-header>
+            <mat-card-content>
+              <div class="macro-goals" formGroupName="macroGoals">
+                <mat-form-field appearance="outline">
+                  <mat-label>Daily Calories</mat-label>
+                  <input matInput type="number" formControlName="caloriesPerDay" min="1000" max="5000">
+                </mat-form-field>
+
+                <mat-form-field appearance="outline">
+                  <mat-label>Protein (g)</mat-label>
+                  <input matInput type="number" formControlName="proteinGrams" min="0">
+                </mat-form-field>
+
+                <mat-form-field appearance="outline">
+                  <mat-label>Carbohydrates (g)</mat-label>
+                  <input matInput type="number" formControlName="carbsGrams" min="0">
+                </mat-form-field>
+
+                <mat-form-field appearance="outline">
+                  <mat-label>Fat (g)</mat-label>
+                  <input matInput type="number" formControlName="fatGrams" min="0">
+                </mat-form-field>
+              </div>
+            </mat-card-content>
+          </mat-card>
+        </form>
+      </div>
+    </mat-tab>
+
+    <!-- Cooking Preferences Tab -->
+    <mat-tab label="Cooking Preferences">
+      <div class="tab-content">
+        <form [formGroup]="preferencesForm" class="cooking-form">
+          
+          <!-- Skill Level -->
+          <mat-card class="form-card">
+            <mat-card-header>
+              <mat-card-title>Cooking Skill Level</mat-card-title>
+              <mat-card-subtitle>This helps us suggest appropriate recipes</mat-card-subtitle>
+            </mat-card-header>
+            <mat-card-content>
+              <mat-radio-group formControlName="skillLevel" class="skill-radio-group">
+                <mat-radio-button 
+                  *ngFor="let skill of skillLevelOptions" 
+                  [value]="skill.value"
+                  class="skill-option">
+                  <div class="skill-info">
+                    <strong>{{ skill.label }}</strong>
+                    <small>{{ skill.description }}</small>
+                  </div>
+                </mat-radio-button>
+              </mat-radio-group>
+            </mat-card-content>
+          </mat-card>
+
+          <!-- Kitchen Equipment -->
+          <mat-card class="form-card">
+            <mat-card-header>
+              <mat-card-title>Available Kitchen Equipment</mat-card-title>
+              <mat-card-subtitle>Select equipment you have access to</mat-card-subtitle>
+            </mat-card-header>
+            <mat-card-content>
+              <div class="checkbox-grid">
+                <mat-checkbox 
+                  *ngFor="let equipment of kitchenEquipmentOptions">
+                  {{ equipment }}
+                </mat-checkbox>
+              </div>
+            </mat-card-content>
+          </mat-card>
+
+          <!-- Time Preferences -->
+          <mat-card class="form-card">
+            <mat-card-header>
+              <mat-card-title>Time Preferences</mat-card-title>
+              <mat-card-subtitle>How much time do you typically have for cooking?</mat-card-subtitle>
+            </mat-card-header>
+            <mat-card-content>
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Maximum cooking time (minutes)</mat-label>
+                <mat-select formControlName="maxCookingTime">
+                  <mat-option [value]="15">15 minutes (Quick meals)</mat-option>
+                  <mat-option [value]="30">30 minutes (Standard)</mat-option>
+                  <mat-option [value]="60">1 hour (Moderate)</mat-option>
+                  <mat-option [value]="120">2 hours (Extended)</mat-option>
+                  <mat-option [value]="999">No limit</mat-option>
+                </mat-select>
+              </mat-form-field>
+            </mat-card-content>
+          </mat-card>
+        </form>
+      </div>
+    </mat-tab>
+  </mat-tab-group>
+
+  <!-- Save Actions -->
+  <div class="save-actions">
+    <div class="action-buttons">      
+      <div class="primary-actions">
+        <button mat-raised-button 
+                color="primary" 
+                (click)="savePreferences()"
+                [disabled]="isSaving">
+          <mat-icon *ngIf="!isSaving">save</mat-icon>
+          <mat-progress-spinner *ngIf="isSaving" diameter="20"></mat-progress-spinner>
+          {{ isSaving ? 'Saving...' : 'Save All Changes' }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Empty State (if no user) -->
+<div class="empty-state" *ngIf="!currentUser && !isLoading">
+  <div class="empty-content">
+    <mat-icon class="empty-icon">person_off</mat-icon>
+    <h3>Unable to Load Profile</h3>
+    <p>There was an error loading your profile information.</p>
+    <button mat-raised-button color="primary" (click)="loadProfile()">
+      <mat-icon>refresh</mat-icon>
+      Try Again
+    </button>
+  </div>
+</div>

@@ -1,0 +1,125 @@
+<div class="login-container">
+  <div class="login-content">
+    <!-- Brand Header -->
+    <div class="brand-header">
+      <div class="brand-logo">
+        <mat-icon class="logo-icon">restaurant_menu</mat-icon>
+        <h1 class="brand-title">NutriMind</h1>
+      </div>
+      <p class="brand-subtitle">Your AI-Powered Nutrition Companion</p>
+    </div>
+
+    <!-- Login Card -->
+    <mat-card class="login-card healthy-card">
+      <mat-card-header>
+        <mat-card-title class="card-title">Welcome Back!</mat-card-title>
+        <mat-card-subtitle class="card-subtitle">Sign in to continue your healthy journey</mat-card-subtitle>
+      </mat-card-header>
+
+      <mat-card-content>
+        <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="login-form">
+          <!-- Email Field -->
+          <mat-form-field appearance="outline" class="form-field">
+            <mat-label>Email Address</mat-label>
+            <input matInput 
+                   type="email" 
+                   formControlName="email"
+                   placeholder="Enter your email"
+                   [class.mat-input-invalid]="loginForm.get('email')?.invalid && loginForm.get('email')?.touched">
+            <mat-icon matSuffix>email</mat-icon>
+            <mat-error *ngIf="loginForm.get('email')?.invalid && loginForm.get('email')?.touched">
+              {{ getEmailErrorMessage() }}
+            </mat-error>
+          </mat-form-field>
+
+          <!-- Password Field -->
+          <mat-form-field appearance="outline" class="form-field">
+            <mat-label>Password</mat-label>
+            <input matInput 
+                   [type]="hidePassword ? 'password' : 'text'"
+                   formControlName="password"
+                   placeholder="Enter your password"
+                   [class.mat-input-invalid]="loginForm.get('password')?.invalid && loginForm.get('password')?.touched">
+            <button mat-icon-button 
+                    matSuffix 
+                    type="button"
+                    (click)="hidePassword = !hidePassword"
+                    [attr.aria-label]="'Hide password'"
+                    [attr.aria-pressed]="hidePassword">
+              <mat-icon>{{ hidePassword ? 'visibility_off' : 'visibility' }}</mat-icon>
+            </button>
+            <mat-error *ngIf="loginForm.get('password')?.invalid && loginForm.get('password')?.touched">
+              {{ getPasswordErrorMessage() }}
+            </mat-error>
+          </mat-form-field>
+
+          <!-- Remember Me & Forgot Password -->
+          <div class="form-options">
+            <mat-checkbox color="primary" class="remember-me">
+              Remember me
+            </mat-checkbox>
+            <a href="#" class="forgot-password">Forgot password?</a>
+          </div>
+
+          <!-- Submit Button -->
+          <button mat-raised-button 
+                  color="primary" 
+                  type="submit"
+                  class="login-btn btn-primary"
+                  [disabled]="isLoading"
+                  [class.loading]="isLoading">
+            <span *ngIf="!isLoading" class="btn-content">
+              <mat-icon>login</mat-icon>
+              Sign In
+            </span>
+            <mat-spinner *ngIf="isLoading" diameter="20" color="accent"></mat-spinner>
+          </button>
+        </form>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Register Link -->
+    <div class="auth-switch">
+      <p>Don't have an account? 
+        <button mat-button 
+                color="primary" 
+                (click)="navigateToRegister()"
+                class="switch-btn">
+          Create Account
+        </button>
+      </p>
+    </div>
+
+    <!-- Demo Credentials (for development) -->
+    <div class="demo-info" *ngIf="true">
+      <mat-expansion-panel class="demo-panel">
+        <mat-expansion-panel-header>
+          <mat-panel-title>
+            <mat-icon>info</mat-icon>
+            Demo Credentials
+          </mat-panel-title>
+        </mat-expansion-panel-header>
+        <div class="demo-content">
+          <p><strong>Email:</strong> demo&#64;nutrimind.com</p>
+          <p><strong>Password:</strong> demo123</p>
+          <button mat-stroked-button 
+                  color="primary" 
+                  (click)="loginForm.patchValue({email: 'demo@nutrimind.com', password: 'demo123'})"
+                  class="demo-fill-btn">
+            Fill Demo Data
+          </button>
+        </div>
+      </mat-expansion-panel>
+    </div>
+  </div>
+
+  <!-- Background Decorations -->
+  <div class="bg-decorations">
+    <div class="decoration deco-1">🥗</div>
+    <div class="decoration deco-2">🍎</div>
+    <div class="decoration deco-3">🥕</div>
+    <div class="decoration deco-4">🥑</div>
+    <div class="decoration deco-5">🍅</div>
+    <div class="decoration deco-6">🥒</div>
+  </div>
+</div>

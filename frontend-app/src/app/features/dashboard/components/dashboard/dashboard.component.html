@@ -1,0 +1,209 @@
+<div class="dashboard-container">
+  <!-- Welcome Section -->
+  <div class="welcome-section">
+    <div class="greeting">
+      <h1 class="welcome-title">{{ getGreeting() }}</h1>
+      <p class="motivational-message">{{ getMotivationalMessage() }}</p>
+    </div>
+    <div class="user-avatar">
+      <mat-icon class="avatar-icon">account_circle</mat-icon>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="isLoading" class="loading-section">
+    <app-loading></app-loading>
+  </div>
+
+  <!-- Dashboard Content -->
+  <div *ngIf="!isLoading" class="dashboard-content">
+    
+    <!-- Quick Stats -->
+    <div class="stats-section">
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-icon">
+            <mat-icon>restaurant_menu</mat-icon>
+          </div>
+          <div class="stat-content">
+            <span class="stat-number">{{ dashboardStats.totalMealPlans }}</span>
+            <span class="stat-label">Active Meal Plans</span>
+          </div>
+        </div>
+        
+        <div class="stat-card">
+          <div class="stat-icon">
+            <mat-icon>track_changes</mat-icon>
+          </div>
+          <div class="stat-content">
+            <span class="stat-number">{{ dashboardStats.completedGoals }}</span>
+            <span class="stat-label">Goals Completed</span>
+          </div>
+        </div>
+        
+        <div class="stat-card">
+          <div class="stat-icon">
+            <mat-icon>local_dining</mat-icon>
+          </div>
+          <div class="stat-content">
+            <span class="stat-number">{{ dashboardStats.recipesCooked }}</span>
+            <span class="stat-label">Recipes Cooked</span>
+          </div>
+        </div>
+        
+        <div class="stat-card">
+          <div class="stat-icon">
+            <mat-icon>favorite</mat-icon>
+          </div>
+          <div class="stat-content">
+            <span class="stat-number">{{ dashboardStats.caloriesSaved }}</span>
+            <span class="stat-label">Calories Managed</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Nutrition Progress -->
+    <div class="nutrition-section">
+      <mat-card class="nutrition-card">
+        <mat-card-header>
+          <mat-card-title>Today's Nutrition Progress</mat-card-title>
+          <mat-card-subtitle>Track your daily nutritional goals</mat-card-subtitle>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="nutrition-grid">
+            <div class="nutrition-item" *ngFor="let item of nutritionProgress | keyvalue">
+              <div class="nutrition-header">
+                <span class="nutrition-name">{{ item.key | titlecase }}</span>
+                <span class="nutrition-values">{{ item.value.current }}/{{ item.value.target }}{{ item.key === 'calories' ? ' kcal' : 'g' }}</span>
+              </div>
+              <mat-progress-bar 
+                mode="determinate" 
+                [value]="item.value.percentage"
+                [color]="item.value.percentage >= 80 ? 'primary' : 'warn'">
+              </mat-progress-bar>
+              <span class="nutrition-percentage" 
+                    [style.color]="getNutritionColor(item.value.percentage)">
+                {{ item.value.percentage }}%
+              </span>
+            </div>
+          </div>
+        </mat-card-content>
+      </mat-card>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="quick-actions-section">
+      <h2 class="section-title">Quick Actions</h2>
+      <div class="actions-grid">
+        <mat-card class="action-card" (click)="navigateToRecipes()">
+          <mat-card-content>
+            <div class="action-icon">
+              <mat-icon>search</mat-icon>
+            </div>
+            <h3>Find Recipes</h3>
+            <p>Discover new healthy recipes based on your preferences</p>
+          </mat-card-content>
+        </mat-card>
+
+        <mat-card class="action-card" (click)="navigateToMealPlans()">
+          <mat-card-content>
+            <div class="action-icon">
+              <mat-icon>event</mat-icon>
+            </div>
+            <h3>Plan Meals</h3>
+            <p>Create and manage your weekly meal plans</p>
+          </mat-card-content>
+        </mat-card>
+
+        <mat-card class="action-card">
+          <mat-card-content>
+            <div class="action-icon">
+              <mat-icon>shopping_cart</mat-icon>
+            </div>
+            <h3>Grocery List</h3>
+            <p>Generate smart shopping lists from your meal plans</p>
+          </mat-card-content>
+        </mat-card>
+
+        <mat-card class="action-card" (click)="navigateToProfile()">
+          <mat-card-content>
+            <div class="action-icon">
+              <mat-icon>settings</mat-icon>
+            </div>
+            <h3>Preferences</h3>
+            <p>Update your dietary preferences and goals</p>
+          </mat-card-content>
+        </mat-card>
+      </div>
+    </div>
+
+    <!-- Recommended Recipes -->
+    <div class="recipes-section">
+      <h2 class="section-title">Recommended for You</h2>
+      <div class="recipes-grid" *ngIf="recommendedRecipes.length > 0; else noRecipes">
+        <mat-card class="recipe-card" *ngFor="let recipe of recommendedRecipes">
+          <mat-card-header>
+            <mat-card-title>{{ recipe.title }}</mat-card-title>
+            <mat-card-subtitle>{{ recipe.prepTimeMinutes }} min • {{ recipe.servings }} servings</mat-card-subtitle>
+          </mat-card-header>
+          <mat-card-content>
+            <div class="recipe-stats">
+              <div class="recipe-stat">
+                <mat-icon>local_fire_department</mat-icon>
+                <span>{{ recipe.nutrition.calories || 'N/A' }} cal</span>
+              </div>
+              <div class="recipe-stat">
+                <mat-icon>star</mat-icon>
+                <span>{{ recipe.rating || 'New' }}</span>
+              </div>
+            </div>
+            <div class="recipe-tags">
+              <mat-chip-set>
+                <mat-chip *ngFor="let tag of recipe.tags?.slice(0, 3)">{{ tag }}</mat-chip>
+              </mat-chip-set>
+            </div>
+          </mat-card-content>
+          <mat-card-actions>
+            <button mat-button color="primary">View Recipe</button>
+            <button mat-icon-button>
+              <mat-icon>favorite_border</mat-icon>
+            </button>
+          </mat-card-actions>
+        </mat-card>
+      </div>
+      
+      <ng-template #noRecipes>
+        <div class="no-content">
+          <mat-icon>restaurant</mat-icon>
+          <p>No recommendations yet. Update your preferences to get personalized recipe suggestions!</p>
+          <button mat-raised-button color="primary" (click)="navigateToProfile()">Update Preferences</button>
+        </div>
+      </ng-template>
+    </div>
+
+    <!-- Recent Activity -->
+    <div class="activity-section">
+      <mat-card class="activity-card">
+        <mat-card-header>
+          <mat-card-title>Recent Activity</mat-card-title>
+          <mat-card-subtitle>Your latest nutrition journey updates</mat-card-subtitle>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="activity-list">
+            <div class="activity-item" *ngFor="let activity of recentActivity">
+              <div class="activity-icon">
+                <mat-icon [color]="'primary'">{{ activity.icon }}</mat-icon>
+              </div>
+              <div class="activity-content">
+                <p class="activity-action">{{ activity.action }}</p>
+                <p class="activity-item-name">{{ activity.item }}</p>
+                <span class="activity-time">{{ activity.time }}</span>
+              </div>
+            </div>
+          </div>
+        </mat-card-content>
+      </mat-card>
+    </div>
+  </div>
+</div>

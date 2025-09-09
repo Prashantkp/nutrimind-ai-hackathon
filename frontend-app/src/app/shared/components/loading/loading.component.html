@@ -1,0 +1,29 @@
+<div class="loading-overlay" [class.with-overlay]="overlay">
+  <div class="loading-content">
+    <div class="spinner-container">
+      <mat-progress-spinner 
+        [diameter]="getSpinnerSize()"
+        color="primary"
+        mode="indeterminate">
+      </mat-progress-spinner>
+      
+      <!-- Animated food icons around spinner -->
+      <div class="food-icons">
+        <mat-icon class="food-icon icon-1">restaurant</mat-icon>
+        <mat-icon class="food-icon icon-2">local_pizza</mat-icon>
+        <mat-icon class="food-icon icon-3">cake</mat-icon>
+        <mat-icon class="food-icon icon-4">coffee</mat-icon>
+      </div>
+    </div>
+    
+    <p class="loading-message">{{ message }}</p>
+    
+    <!-- Fun loading messages -->
+    <div class="fun-messages">
+      <div class="message-item active">🥗 Preparing fresh ingredients...</div>
+      <div class="message-item">🍳 Cooking up something delicious...</div>
+      <div class="message-item">📋 Organizing your meal plan...</div>
+      <div class="message-item">🛒 Checking grocery availability...</div>
+    </div>
+  </div>
+</div>

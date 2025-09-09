@@ -1,0 +1,67 @@
+<div class="not-found-container">
+  <div class="not-found-content">
+    <!-- Fun 404 Illustration -->
+    <div class="error-illustration">
+      <div class="plate">
+        <mat-icon class="empty-plate">restaurant</mat-icon>
+        <div class="floating-icons">
+          <mat-icon class="floating-icon icon-1">sentiment_dissatisfied</mat-icon>
+          <mat-icon class="floating-icon icon-2">search</mat-icon>
+          <mat-icon class="floating-icon icon-3">help_outline</mat-icon>
+        </div>
+      </div>
+    </div>
+
+    <!-- Error Message -->
+    <div class="error-message">
+      <h1 class="error-code">404</h1>
+      <h2 class="error-title">Oops! Recipe Not Found</h2>
+      <p class="error-description">
+        It looks like this page went on a diet and disappeared! 
+        The recipe you're looking for might have been moved or doesn't exist.
+      </p>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="error-actions">
+      <button mat-raised-button color="primary" (click)="goHome()" class="action-btn">
+        <mat-icon>home</mat-icon>
+        Back to Kitchen (Home)
+      </button>
+      
+      <button mat-stroked-button color="primary" (click)="goBack()" class="action-btn">
+        <mat-icon>arrow_back</mat-icon>
+        Go Back
+      </button>
+    </div>
+
+    <!-- Helpful Links -->
+    <div class="helpful-links">
+      <p class="links-title">Maybe you're looking for:</p>
+      <div class="links-grid">
+        <a mat-button routerLink="/dashboard" class="help-link">
+          <mat-icon>dashboard</mat-icon>
+          Dashboard
+        </a>
+        <a mat-button routerLink="/recipes" class="help-link">
+          <mat-icon>book</mat-icon>
+          Browse Recipes
+        </a>
+        <a mat-button routerLink="/meal-plans" class="help-link">
+          <mat-icon>calendar_today</mat-icon>
+          Meal Plans
+        </a>
+        <a mat-button routerLink="/grocery-lists" class="help-link">
+          <mat-icon>shopping_cart</mat-icon>
+          Grocery Lists
+        </a>
+      </div>
+    </div>
+
+    <!-- Fun Food Facts -->
+    <div class="fun-fact">
+      <mat-icon>lightbulb</mat-icon>
+      <p>Did you know? The average person spends 37 minutes a day looking for something they can't find. Let's get you back on track!</p>
+    </div>
+  </div>
+</div>

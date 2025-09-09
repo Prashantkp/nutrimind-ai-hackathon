@@ -1,0 +1,158 @@
+<div class="register-container">
+  <div class="register-content">
+    <!-- Brand Header -->
+    <div class="brand-header">
+      <div class="brand-logo">
+        <mat-icon class="logo-icon">restaurant_menu</mat-icon>
+        <h1 class="brand-title">NutriMind</h1>
+      </div>
+      <p class="brand-subtitle">Start Your Healthy Journey Today</p>
+    </div>
+
+    <!-- Register Card -->
+    <mat-card class="register-card healthy-card">
+      <mat-card-header>
+        <mat-card-title class="card-title">Create Your Account</mat-card-title>
+        <mat-card-subtitle class="card-subtitle">Join thousands of people living healthier lives</mat-card-subtitle>
+      </mat-card-header>
+
+      <mat-card-content>
+        <form [formGroup]="registerForm" (ngSubmit)="onSubmit()" class="register-form">
+          <!-- Name Fields Row -->
+          <div class="name-row">
+            <!-- First Name Field -->
+            <mat-form-field appearance="outline" class="form-field half-width">
+              <mat-label>First Name</mat-label>
+              <input matInput 
+                     type="text" 
+                     formControlName="firstName"
+                     placeholder="Enter your first name"
+                     [class.mat-input-invalid]="registerForm.get('firstName')?.invalid && registerForm.get('firstName')?.touched">
+              <mat-icon matSuffix>person</mat-icon>
+              <mat-error *ngIf="registerForm.get('firstName')?.invalid && registerForm.get('firstName')?.touched">
+                {{ getFirstNameErrorMessage() }}
+              </mat-error>
+            </mat-form-field>
+
+            <!-- Last Name Field -->
+            <mat-form-field appearance="outline" class="form-field half-width">
+              <mat-label>Last Name</mat-label>
+              <input matInput 
+                     type="text" 
+                     formControlName="lastName"
+                     placeholder="Enter your last name"
+                     [class.mat-input-invalid]="registerForm.get('lastName')?.invalid && registerForm.get('lastName')?.touched">
+              <mat-icon matSuffix>person_outline</mat-icon>
+              <mat-error *ngIf="registerForm.get('lastName')?.invalid && registerForm.get('lastName')?.touched">
+                {{ getLastNameErrorMessage() }}
+              </mat-error>
+            </mat-form-field>
+          </div>
+
+          <!-- Email Field -->
+          <mat-form-field appearance="outline" class="form-field">
+            <mat-label>Email Address</mat-label>
+            <input matInput 
+                   type="email" 
+                   formControlName="email"
+                   placeholder="Enter your email address"
+                   [class.mat-input-invalid]="registerForm.get('email')?.invalid && registerForm.get('email')?.touched">
+            <mat-icon matSuffix>email</mat-icon>
+            <mat-error *ngIf="registerForm.get('email')?.invalid && registerForm.get('email')?.touched">
+              {{ getEmailErrorMessage() }}
+            </mat-error>
+          </mat-form-field>
+
+          <!-- Password Field -->
+          <mat-form-field appearance="outline" class="form-field">
+            <mat-label>Password</mat-label>
+            <input matInput 
+                   [type]="hidePassword ? 'password' : 'text'"
+                   formControlName="password"
+                   placeholder="Create a strong password"
+                   [class.mat-input-invalid]="registerForm.get('password')?.invalid && registerForm.get('password')?.touched">
+            <button mat-icon-button 
+                    matSuffix 
+                    type="button"
+                    (click)="hidePassword = !hidePassword"
+                    [attr.aria-label]="'Hide password'"
+                    [attr.aria-pressed]="hidePassword">
+              <mat-icon>{{ hidePassword ? 'visibility_off' : 'visibility' }}</mat-icon>
+            </button>
+            <mat-error *ngIf="registerForm.get('password')?.invalid && registerForm.get('password')?.touched">
+              {{ getPasswordErrorMessage() }}
+            </mat-error>
+          </mat-form-field>
+
+          <!-- Confirm Password Field -->
+          <mat-form-field appearance="outline" class="form-field">
+            <mat-label>Confirm Password</mat-label>
+            <input matInput 
+                   [type]="hideConfirmPassword ? 'password' : 'text'"
+                   formControlName="confirmPassword"
+                   placeholder="Confirm your password"
+                   [class.mat-input-invalid]="registerForm.get('confirmPassword')?.invalid && registerForm.get('confirmPassword')?.touched">
+            <button mat-icon-button 
+                    matSuffix 
+                    type="button"
+                    (click)="hideConfirmPassword = !hideConfirmPassword"
+                    [attr.aria-label]="'Hide confirm password'"
+                    [attr.aria-pressed]="hideConfirmPassword">
+              <mat-icon>{{ hideConfirmPassword ? 'visibility_off' : 'visibility' }}</mat-icon>
+            </button>
+            <mat-error *ngIf="registerForm.get('confirmPassword')?.invalid && registerForm.get('confirmPassword')?.touched">
+              {{ getConfirmPasswordErrorMessage() }}
+            </mat-error>
+          </mat-form-field>
+
+          <!-- Terms & Conditions -->
+          <div class="form-options">
+            <mat-checkbox formControlName="acceptTerms" color="primary" class="terms-checkbox">
+              I agree to the <a href="#" class="terms-link">Terms of Service</a> and <a href="#" class="terms-link">Privacy Policy</a>
+            </mat-checkbox>
+            <mat-error *ngIf="registerForm.get('acceptTerms')?.invalid && registerForm.get('acceptTerms')?.touched" class="terms-error">
+              You must accept the terms and conditions
+            </mat-error>
+          </div>
+
+          <!-- Submit Button -->
+          <button mat-raised-button 
+                  color="primary" 
+                  type="submit"
+                  class="register-btn btn-primary"
+                  [disabled]="isLoading"
+                  [class.loading]="isLoading">
+            <span *ngIf="!isLoading" class="btn-content">
+              <mat-icon>person_add</mat-icon>
+              Create Account
+            </span>
+            <mat-spinner *ngIf="isLoading" diameter="20" color="accent"></mat-spinner>
+          </button>
+        </form>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Login Link -->
+    <div class="auth-switch">
+      <p>Already have an account? 
+        <button mat-button 
+                color="primary" 
+                (click)="navigateToLogin()"
+                class="switch-btn">
+          Sign In
+        </button>
+      </p>
+    </div>
+  </div>
+
+  <!-- Background Decorations -->
+  <div class="bg-decorations">
+    <div class="decoration deco-1">🌱</div>
+    <div class="decoration deco-2">🥗</div>
+    <div class="decoration deco-3">🥕</div>
+    <div class="decoration deco-4">🥑</div>
+    <div class="decoration deco-5">🍅</div>
+    <div class="decoration deco-6">🥒</div>
+    <div class="decoration deco-7">🌿</div>
+  </div>
+</div>

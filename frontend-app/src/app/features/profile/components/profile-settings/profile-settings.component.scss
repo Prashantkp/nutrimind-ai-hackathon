@@ -1,0 +1,79 @@
+.profile-settings {
+  padding: 20px;
+  max-width: 800px;
+  margin: 0 auto;
+
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+  }
+
+  .form-section {
+    margin-bottom: 30px;
+
+    .section-title {
+      font-size: 1.2em;
+      font-weight: 500;
+      margin-bottom: 16px;
+      color: #333;
+    }
+
+    .form-row {
+      display: flex;
+      gap: 16px;
+      margin-bottom: 16px;
+
+      .form-field {
+        flex: 1;
+      }
+    }
+
+    .radio-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .checkbox-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+  }
+
+  .macro-goals {
+    .macro-inputs {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 16px;
+    }
+  }
+
+  .actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 20px;
+    border-top: 1px solid #e0e0e0;
+  }
+
+  .danger-zone {
+    margin-top: 40px;
+    padding: 20px;
+    border: 1px solid #f44336;
+    border-radius: 8px;
+    background: #ffebee;
+
+    h3 {
+      color: #d32f2f;
+      margin-bottom: 16px;
+    }
+
+    p {
+      color: #666;
+      margin-bottom: 16px;
+    }
+  }
+}
