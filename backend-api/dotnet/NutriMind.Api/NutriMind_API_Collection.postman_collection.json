@@ -1,0 +1,506 @@
+{
+  "info": {
+    "name": "NutriMind API",
+    "description": "Complete API collection for NutriMind meal planning application",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:7071",
+      "description": "Base URL for the API"
+    },
+    {
+      "key": "authToken",
+      "value": "your-jwt-token-here",
+      "description": "JWT authentication token"
+    }
+  ],
+  "item": [
+    {
+      "name": "Profile API",
+      "item": [
+        {
+          "name": "Create User Profile",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"john.doe@example.com\",\n  \"firstName\": \"John\",\n  \"lastName\": \"Doe\",\n  \"age\": 30,\n  \"height\": 175.5,\n  \"weight\": 70.0,\n  \"activityLevel\": \"moderate\",\n  \"dietaryPreference\": \"vegetarian\",\n  \"allergens\": [\"nuts\", \"shellfish\"],\n  \"dislikes\": [\"mushrooms\", \"cilantro\"],\n  \"healthGoals\": [\"weight_loss\", \"muscle_gain\"],\n  \"targetCalories\": 2000,\n  \"mealFrequency\": 3,\n  \"cookingSkillLevel\": \"intermediate\",\n  \"cookingTimePreference\": 45,\n  \"budgetPerWeek\": 75.00,\n  \"preferredCuisines\": [\"mediterranean\", \"asian\", \"italian\"]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/profile",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "profile"]
+            }
+          }
+        },
+        {
+          "name": "Get User Profile",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/profile",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "profile"]
+            }
+          }
+        },
+        {
+          "name": "Update User Profile",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"targetCalories\": 2200,\n  \"cookingSkillLevel\": \"advanced\",\n  \"budgetPerWeek\": 85.00\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/profile",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "profile"]
+            }
+          }
+        },
+        {
+          "name": "Delete User Profile",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/profile",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "profile"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Meal Plans API",
+      "item": [
+        {
+          "name": "Generate Meal Plan",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"weekIdentifier\": \"2025-W37\",\n  \"dietaryPreference\": \"vegetarian\",\n  \"allergens\": [\"nuts\"],\n  \"targetCalories\": 2000,\n  \"maxPrepTime\": 45,\n  \"budgetConstraint\": 75.00,\n  \"varietyLevel\": \"high\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/mealplans/generate",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "mealplans", "generate"]
+            }
+          }
+        },
+        {
+          "name": "Get All Meal Plans",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/mealplans",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "mealplans"]
+            }
+          }
+        },
+        {
+          "name": "Get Meal Plan by Week",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/mealplans/2025-W37",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "mealplans", "2025-W37"]
+            }
+          }
+        },
+        {
+          "name": "Check Generation Status",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/mealplans/status/orchestration-id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "mealplans", "status", "orchestration-id"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Recipes API",
+      "item": [
+        {
+          "name": "Search Recipes",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/recipes/search?query=chicken&cuisineType=mediterranean&maxPrepTime=30&page=1&pageSize=20",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "recipes", "search"],
+              "query": [
+                {
+                  "key": "query",
+                  "value": "chicken"
+                },
+                {
+                  "key": "cuisineType",
+                  "value": "mediterranean"
+                },
+                {
+                  "key": "maxPrepTime",
+                  "value": "30"
+                },
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "pageSize",
+                  "value": "20"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Recipe by ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/recipes/recipe-123",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "recipes", "recipe-123"]
+            }
+          }
+        },
+        {
+          "name": "Get Recipe Suggestions",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"mealType\": \"dinner\",\n  \"cuisinePreference\": \"italian\",\n  \"maxPrepTime\": 45,\n  \"excludeIngredients\": [\"mushrooms\"],\n  \"targetCalories\": 600,\n  \"servings\": 2\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/recipes/suggestions",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "recipes", "suggestions"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Integrations API",
+      "item": [
+        {
+          "name": "Connect Provider",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"provider\": \"instacart\",\n  \"redirectUri\": \"https://your-app.com/callback\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/integrations/connect",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "integrations", "connect"]
+            }
+          }
+        },
+        {
+          "name": "OAuth Callback",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"provider\": \"instacart\",\n  \"code\": \"auth-code-from-provider\",\n  \"state\": \"security-state-token\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/integrations/oauth/callback",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "integrations", "oauth", "callback"]
+            }
+          }
+        },
+        {
+          "name": "Get Integrations",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/integrations",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "integrations"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Grocery API",
+      "item": [
+        {
+          "name": "Create Checkout",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"mealPlanId\": \"meal-plan-123\",\n  \"provider\": \"instacart\",\n  \"selectedItemIds\": [\"milk\", \"eggs\", \"chicken breast\"],\n  \"deliveryDate\": \"2025-09-10\",\n  \"deliveryTime\": \"10:00-12:00\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/grocery/checkout",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "grocery", "checkout"]
+            }
+          }
+        },
+        {
+          "name": "Get Grocery List",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/grocery/meal-plan-123",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "grocery", "meal-plan-123"]
+            }
+          }
+        },
+        {
+          "name": "Get Available Providers",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/grocery/providers",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "grocery", "providers"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Notifications API",
+      "item": [
+        {
+          "name": "Test Notification",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"type\": \"email\",\n  \"message\": \"This is a test notification\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/notifications/test",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "notifications", "test"]
+            }
+          }
+        },
+        {
+          "name": "Send Meal Reminder",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": \"user-123\",\n  \"mealType\": \"breakfast\",\n  \"recipeName\": \"Avocado Toast\",\n  \"customMessage\": \"Time for breakfast!\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/notifications/meal-reminder",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "notifications", "meal-reminder"]
+            }
+          }
+        },
+        {
+          "name": "Get Notification Settings",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/notifications/settings",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "notifications", "settings"]
+            }
+          }
+        },
+        {
+          "name": "Update Notification Settings",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"emailNotifications\": true,\n  \"pushNotifications\": true,\n  \"mealReminders\": true,\n  \"groceryReminders\": false,\n  \"reminderTimes\": [\"07:30\", \"12:00\", \"18:00\"]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/notifications/settings",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "notifications", "settings"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

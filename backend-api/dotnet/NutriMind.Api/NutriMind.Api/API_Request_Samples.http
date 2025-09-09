@@ -1,0 +1,403 @@
+# NutriMind API - Request Samples
+# Base URL for local development
+@baseUrl = http://localhost:7066
+# Replace with your Azure Function App URL for production: https://your-app.azurewebsites.net
+
+###############################################################################
+# PROFILE MANAGEMENT
+###############################################################################
+
+### Create Profile
+POST {{baseUrl}}/api/profile
+Content-Type: application/json
+
+{
+  "email": "user@example.com",
+  "firstName": "John",
+  "lastName": "Doe",
+  "age": 30,
+  "height": 175.0,
+  "weight": 70.0,
+  "activityLevel": "moderate",
+  "dietaryPreference": "vegetarian",
+  "allergens": ["nuts", "dairy"],
+  "dislikes": ["mushrooms", "olives"],
+  "healthGoals": ["weight_loss", "muscle_gain"],
+  "preferredCuisines": ["italian", "mexican", "indian"],
+  "cookingSkillLevel": "intermediate",
+  "budgetPerWeek": 100.00,
+  "householdSize": 2,
+  "kitchenEquipment": ["oven", "stovetop", "microwave"],
+  "shoppingPreference": "online",
+  "phoneNumber": "+1234567890"
+}
+
+### Get Profile
+GET {{baseUrl}}/api/profile
+
+### Update Profile
+PUT {{baseUrl}}/api/profile
+Content-Type: application/json
+
+{
+  "age": 31,
+  "weight": 68.0,
+  "activityLevel": "active",
+  "budgetPerWeek": 120.00,
+  "healthGoals": ["weight_loss", "better_nutrition"]
+}
+
+###############################################################################
+# MEAL PLAN MANAGEMENT
+###############################################################################
+
+### Generate Meal Plan
+POST {{baseUrl}}/api/mealplans
+Content-Type: application/json
+
+{
+  "weekIdentifier": "2025-W02",
+  "preferences": {
+    "mealsPerDay": 3,
+    "budgetConstraint": 100.00,
+    "cuisinePreferences": ["italian", "mexican"],
+    "mealTypes": ["breakfast", "lunch", "dinner"],
+    "servingSize": 2,
+    "cookingTimeLimit": 45,
+    "complexity": "medium",
+    "avoidIngredients": ["mushrooms"],
+    "prioritizeIngredients": ["chicken", "vegetables"]
+  }
+}
+
+### Get Meal Plan by ID
+GET {{baseUrl}}/api/mealplans/meal-plan-123
+
+### Get Meal Plans by Week
+GET {{baseUrl}}/api/mealplans?week=2025-W02
+
+### Get Meal Plan Generation Status
+GET {{baseUrl}}/api/mealplans/status/orchestration-id-here
+
+### Update Meal Plan
+PUT {{baseUrl}}/api/mealplans/meal-plan-123
+Content-Type: application/json
+
+{
+  "status": "approved",
+  "feedback": "Looks great! Please add more vegetarian options next week."
+}
+
+###############################################################################
+# RECIPE MANAGEMENT
+###############################################################################
+
+### Search Recipes
+GET {{baseUrl}}/api/recipes/search?query=chicken pasta&cuisine=italian&dietary=vegetarian&cookingTime=30
+
+### Get Recipe by ID
+GET {{baseUrl}}/api/recipes/recipe-123
+
+### Get Recipe Recommendations
+GET {{baseUrl}}/api/recipes/recommendations?userId=user-123&mealType=dinner&cuisine=italian
+
+###############################################################################
+# GROCERY LIST MANAGEMENT
+###############################################################################
+
+### Get Available Grocery Providers
+GET {{baseUrl}}/api/grocery/providers
+
+### Get Grocery List for Meal Plan
+GET {{baseUrl}}/api/grocery/meal-plan-123
+
+### Update Grocery List
+PUT {{baseUrl}}/api/grocery/meal-plan-123
+Content-Type: application/json
+
+{
+  "items": [
+    {
+      "name": "Organic Chicken Breast",
+      "quantity": "2",
+      "unit": "lbs",
+      "category": "meat",
+      "estimatedCost": 12.99,
+      "isObtained": false,
+      "notes": "Free-range preferred"
+    },
+    {
+      "name": "Bell Peppers",
+      "quantity": "3",
+      "unit": "pieces",
+      "category": "vegetables",
+      "estimatedCost": 4.50,
+      "isObtained": true
+    }
+  ],
+  "totalEstimatedCost": 17.49,
+  "storePreference": "whole_foods"
+}
+
+### Create Grocery Checkout
+POST {{baseUrl}}/api/grocery/checkout
+Content-Type: application/json
+
+{
+  "mealPlanId": "meal-plan-123",
+  "provider": "instacart",
+  "deliveryPreference": "delivery",
+  "deliveryAddress": "123 Main St, City, State 12345",
+  "deliveryTime": "2025-01-15T18:00:00Z",
+  "specialInstructions": "Leave at front door",
+  "items": [
+    {
+      "name": "Organic Bananas",
+      "quantity": "2",
+      "unit": "bunches",
+      "category": "produce",
+      "estimatedCost": 3.99
+    },
+    {
+      "name": "Chicken Breast",
+      "quantity": "1",
+      "unit": "lb",
+      "category": "meat",
+      "estimatedCost": 8.99
+    }
+  ]
+}
+
+###############################################################################
+# GROCERY PROVIDER INTEGRATIONS
+###############################################################################
+
+### Get Integration Status
+GET {{baseUrl}}/api/integrations
+
+### Connect to Provider (e.g., Instacart)
+POST {{baseUrl}}/api/integrations/instacart/connect
+Content-Type: application/json
+
+{
+  "email": "user@example.com",
+  "password": "userPassword123",
+  "storePreference": "whole_foods_market"
+}
+
+### Connect to Amazon Fresh
+POST {{baseUrl}}/api/integrations/amazon-fresh/connect
+Content-Type: application/json
+
+{
+  "amazonAccountEmail": "user@example.com",
+  "accessToken": "amazon-access-token-here",
+  "deliveryAddress": "123 Main St, City, State 12345"
+}
+
+### Connect to Walmart
+POST {{baseUrl}}/api/integrations/walmart/connect
+Content-Type: application/json
+
+{
+  "phoneNumber": "+1234567890",
+  "verificationCode": "123456",
+  "preferredStoreId": "walmart-store-123"
+}
+
+### Connect to Kroger
+POST {{baseUrl}}/api/integrations/kroger/connect
+Content-Type: application/json
+
+{
+  "email": "user@example.com",
+  "password": "userPassword123",
+  "loyaltyId": "kroger-plus-card-id",
+  "preferredStoreId": "kroger-store-456"
+}
+
+### Handle OAuth Callback (Instacart)
+POST {{baseUrl}}/api/integrations/instacart/callback
+Content-Type: application/json
+
+{
+  "code": "oauth-authorization-code",
+  "state": "csrf-protection-token"
+}
+
+### Handle OAuth Callback (Amazon Fresh)
+POST {{baseUrl}}/api/integrations/amazon-fresh/callback
+Content-Type: application/json
+
+{
+  "access_token": "amazon-access-token",
+  "refresh_token": "amazon-refresh-token",
+  "expires_in": 3600
+}
+
+### Disconnect from Provider
+DELETE {{baseUrl}}/api/integrations/instacart/disconnect
+
+###############################################################################
+# NOTIFICATIONS
+###############################################################################
+
+### Test Notification
+POST {{baseUrl}}/api/notifications/test
+Content-Type: application/json
+
+{
+  "type": "email",
+  "recipient": "user@example.com",
+  "subject": "Test Notification",
+  "message": "This is a test notification from NutriMind API"
+}
+
+### Get Notification Settings
+GET {{baseUrl}}/api/notifications/settings
+
+### Update Notification Settings
+PUT {{baseUrl}}/api/notifications/settings
+Content-Type: application/json
+
+{
+  "emailEnabled": true,
+  "pushEnabled": false,
+  "mealReminders": true,
+  "groceryReminders": true,
+  "weeklyPlanReminders": false,
+  "nutritionTips": true,
+  "reminderTimes": ["08:00", "17:30"]
+}
+
+### Send Meal Reminder
+POST {{baseUrl}}/api/notifications/meal-reminder
+Content-Type: application/json
+
+{
+  "userId": "user-123",
+  "mealPlanId": "meal-plan-123",
+  "mealType": "lunch",
+  "scheduledTime": "2025-01-15T12:00:00Z",
+  "message": "Time for lunch! Today's meal: Grilled Chicken Salad"
+}
+
+### Send Grocery Reminder
+POST {{baseUrl}}/api/notifications/grocery-reminder
+Content-Type: application/json
+
+{
+  "userId": "user-123",
+  "mealPlanId": "meal-plan-123",
+  "reminderType": "shopping_list_ready",
+  "message": "Your grocery list is ready! You have 12 items to pick up.",
+  "scheduledTime": "2025-01-14T09:00:00Z"
+}
+
+###############################################################################
+# TEST/DEBUG ENDPOINTS
+###############################################################################
+
+### Function1 (GET)
+GET {{baseUrl}}/api/Function1?name=TestUser
+
+### Function1 (POST)
+POST {{baseUrl}}/api/Function1
+Content-Type: application/json
+
+{
+  "name": "TestUser",
+  "message": "Hello from API test"
+}
+
+###############################################################################
+# USAGE EXAMPLES WITH REALISTIC WORKFLOWS
+###############################################################################
+
+### WORKFLOW 1: Complete User Onboarding
+# 1. Create user profile (see Create Profile above)
+# 2. Generate first meal plan (see Generate Meal Plan above)
+# 3. Get grocery list (see Get Grocery List above)
+# 4. Connect to grocery provider (see Connect to Provider above)
+
+### WORKFLOW 2: Weekly Meal Planning
+# 1. Get meal plans for current week
+GET {{baseUrl}}/api/mealplans?week=2025-W02
+
+# 2. Generate new meal plan for next week
+POST {{baseUrl}}/api/mealplans
+Content-Type: application/json
+
+{
+  "weekIdentifier": "2025-W03",
+  "preferences": {
+    "mealsPerDay": 3,
+    "budgetConstraint": 100.00
+  }
+}
+
+# 3. Check generation status
+GET {{baseUrl}}/api/mealplans/status/new-orchestration-id
+
+### WORKFLOW 3: Grocery Shopping
+# 1. Get grocery list for meal plan
+GET {{baseUrl}}/api/grocery/meal-plan-123
+
+# 2. Update items as obtained
+PUT {{baseUrl}}/api/grocery/meal-plan-123
+Content-Type: application/json
+
+{
+  "items": [
+    {
+      "name": "Chicken Breast",
+      "isObtained": true
+    }
+  ]
+}
+
+# 3. Create checkout for remaining items
+POST {{baseUrl}}/api/grocery/checkout
+Content-Type: application/json
+
+{
+  "mealPlanId": "meal-plan-123",
+  "provider": "instacart"
+}
+
+###############################################################################
+# NOTES
+###############################################################################
+
+# 1. Replace {{baseUrl}} with http://localhost:7066 for local testing
+# 2. For Azure deployment, use your Function App URL
+# 3. Most endpoints require authentication headers (add as needed)
+# 4. Replace example IDs (meal-plan-123, user-123) with actual IDs
+# 5. Some endpoints may require function keys depending on your security settings
+# 6. OAuth callbacks are typically handled by the frontend, these are for testing
+
+###############################################################################
+# EXPECTED RESPONSE FORMATS
+###############################################################################
+
+# Success Response:
+# {
+#   "success": true,
+#   "data": { ... },
+#   "message": "Operation completed successfully"
+# }
+
+# Error Response:
+# {
+#   "success": false,
+#   "error": "Error description",
+#   "statusCode": 400
+# }
+
+# Async Operation Response (for meal plan generation):
+# {
+#   "success": true,
+#   "orchestrationId": "abc123...",
+#   "statusUrl": "/api/mealplans/status/abc123...",
+#   "message": "Meal plan generation started"
+# }
