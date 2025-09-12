@@ -1,0 +1,226 @@
+<app-header></app-header>
+
+<div class="profile-setup-container">
+  <div class="setup-header">
+    <h1>Complete Your Profile</h1>
+    <p>Help us personalize your nutrition journey with some basic information</p>
+  </div>
+
+  <mat-stepper #stepper linear>
+    <!-- Step 1: Personal Information -->
+    <mat-step [stepControl]="personalInfoForm">
+      <ng-template matStepLabel>Personal Information</ng-template>
+      
+      <mat-card class="form-card">
+        <mat-card-header>
+          <mat-card-title>Tell us about yourself</mat-card-title>
+          <mat-card-subtitle>Basic information to calculate your nutritional needs</mat-card-subtitle>
+        </mat-card-header>
+        
+        <mat-card-content>
+          <form [formGroup]="personalInfoForm" (ngSubmit)="onPersonalInfoSubmit()">
+            <div class="form-row">
+              <mat-form-field appearance="outline" class="half-width">
+                <mat-label>First Name</mat-label>
+                <input matInput formControlName="firstName" required>
+                <mat-error>{{ getFieldError(personalInfoForm, 'firstName') }}</mat-error>
+              </mat-form-field>
+              
+              <mat-form-field appearance="outline" class="half-width">
+                <mat-label>Last Name</mat-label>
+                <input matInput formControlName="lastName" required>
+                <mat-error>{{ getFieldError(personalInfoForm, 'lastName') }}</mat-error>
+              </mat-form-field>
+            </div>
+
+            <div class="form-row">
+              <mat-form-field appearance="outline" class="half-width">
+                <mat-label>Date of Birth</mat-label>
+                <input matInput [matDatepicker]="dobPicker" formControlName="dateOfBirth" required>
+                <mat-datepicker-toggle matIconSuffix [for]="dobPicker"></mat-datepicker-toggle>
+                <mat-datepicker #dobPicker></mat-datepicker>
+                <mat-error>{{ getFieldError(personalInfoForm, 'dateOfBirth') }}</mat-error>
+              </mat-form-field>
+              
+              <mat-form-field appearance="outline" class="half-width">
+                <mat-label>Gender</mat-label>
+                <mat-select formControlName="gender" required>
+                  <mat-option *ngFor="let gender of genderOptions" [value]="gender">
+                    {{ gender }}
+                  </mat-option>
+                </mat-select>
+                <mat-error>{{ getFieldError(personalInfoForm, 'gender') }}</mat-error>
+              </mat-form-field>
+            </div>
+
+            <div class="form-row">
+              <mat-form-field appearance="outline" class="half-width">
+                <mat-label>Height (cm)</mat-label>
+                <input matInput type="number" formControlName="height" required min="100" max="250">
+                <mat-error>{{ getFieldError(personalInfoForm, 'height') }}</mat-error>
+              </mat-form-field>
+              
+              <mat-form-field appearance="outline" class="half-width">
+                <mat-label>Weight (kg)</mat-label>
+                <input matInput type="number" formControlName="weight" required min="30" max="300">
+                <mat-error>{{ getFieldError(personalInfoForm, 'weight') }}</mat-error>
+              </mat-form-field>
+            </div>
+
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Activity Level</mat-label>
+              <mat-select formControlName="activityLevel" required>
+                <mat-option *ngFor="let level of activityLevels" [value]="level.value">
+                  {{ level.label }}
+                </mat-option>
+              </mat-select>
+              <mat-error>{{ getFieldError(personalInfoForm, 'activityLevel') }}</mat-error>
+            </mat-form-field>
+          </form>
+        </mat-card-content>
+        
+        <mat-card-actions align="end">
+          <button mat-raised-button color="primary" 
+                  [disabled]="!personalInfoForm.valid"
+                  (click)="onPersonalInfoSubmit(); stepper.next()">
+            Continue
+          </button>
+        </mat-card-actions>
+      </mat-card>
+    </mat-step>
+
+    <!-- Step 2: Health Goals -->
+    <mat-step [stepControl]="healthGoalsForm">
+      <ng-template matStepLabel>Health Goals</ng-template>
+      
+      <mat-card class="form-card">
+        <mat-card-header>
+          <mat-card-title>What are your health goals?</mat-card-title>
+          <mat-card-subtitle>Help us understand what you want to achieve</mat-card-subtitle>
+        </mat-card-header>
+        
+        <mat-card-content>
+          <form [formGroup]="healthGoalsForm" (ngSubmit)="onHealthGoalsSubmit()">
+            <div class="form-section">
+              <h3>Primary Goals (select all that apply)</h3>
+              <div class="checkbox-grid">
+                <mat-checkbox *ngFor="let goal of healthGoals" 
+                             [checked]="healthGoalsForm.get('primaryGoals')?.value.includes(goal.value)"
+                             (change)="onGoalChange(goal.value, $event.checked)">
+                  {{ goal.label }}
+                </mat-checkbox>
+              </div>
+            </div>
+
+            <div class="form-section">
+              <h3>Medical Conditions (select all that apply)</h3>
+              <div class="checkbox-grid">
+                <mat-checkbox *ngFor="let condition of medicalConditions" 
+                             [checked]="healthGoalsForm.get('medicalConditions')?.value.includes(condition.value)"
+                             (change)="onMedicalConditionChange(condition.value, $event.checked)">
+                  {{ condition.label }}
+                </mat-checkbox>
+              </div>
+            </div>
+
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Current Medications</mat-label>
+              <textarea matInput formControlName="medications" 
+                       placeholder="List any medications you're currently taking (comma separated)"
+                       rows="3"></textarea>
+              <mat-hint>Some medications can affect nutrition needs</mat-hint>
+            </mat-form-field>
+          </form>
+        </mat-card-content>
+        
+        <mat-card-actions style="display: flex; justify-content: space-between;">
+          <button mat-button (click)="stepper.previous()">Back</button>
+          <button mat-raised-button color="primary" 
+                  [disabled]="!healthGoalsForm.valid"
+                  (click)="onHealthGoalsSubmit(); stepper.next()">
+            Continue
+          </button>
+        </mat-card-actions>
+      </mat-card>
+    </mat-step>
+
+    <!-- Step 3: Dietary Preferences -->
+    <mat-step [stepControl]="dietaryPreferencesForm">
+      <ng-template matStepLabel>Dietary Preferences</ng-template>
+      
+      <mat-card class="form-card">
+        <mat-card-header>
+          <mat-card-title>Tell us about your diet</mat-card-title>
+          <mat-card-subtitle>Your preferences and restrictions help us create better meal plans</mat-card-subtitle>
+        </mat-card-header>
+        
+        <mat-card-content>
+          <form [formGroup]="dietaryPreferencesForm" (ngSubmit)="onDietaryPreferencesSubmit()">
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Dietary Preference</mat-label>
+              <mat-select formControlName="dietaryPreference" required>
+                <mat-option *ngFor="let pref of dietaryPreferences" [value]="pref.value">
+                  {{ pref.label }}
+                </mat-option>
+              </mat-select>
+              <mat-error>{{ getFieldError(dietaryPreferencesForm, 'dietaryPreference') }}</mat-error>
+            </mat-form-field>
+
+            <div class="form-section">
+              <h3>Allergens (select all that apply)</h3>
+              <div class="checkbox-grid">
+                <mat-checkbox *ngFor="let allergen of allergens" 
+                             [checked]="dietaryPreferencesForm.get('allergens')?.value.includes(allergen.value)"
+                             (change)="onAllergenChange(allergen.value, $event.checked)">
+                  {{ allergen.label }}
+                </mat-checkbox>
+              </div>
+            </div>
+
+            <div class="form-row">
+              <mat-form-field appearance="outline" class="half-width">
+                <mat-label>Cooking Skill Level</mat-label>
+                <mat-select formControlName="cookingSkillLevel" required>
+                  <mat-option *ngFor="let skill of cookingSkillLevels" [value]="skill.value">
+                    {{ skill.label }}
+                  </mat-option>
+                </mat-select>
+                <mat-error>{{ getFieldError(dietaryPreferencesForm, 'cookingSkillLevel') }}</mat-error>
+              </mat-form-field>
+              
+              <mat-form-field appearance="outline" class="half-width">
+                <mat-label>Budget Range</mat-label>
+                <mat-select formControlName="budgetRange" required>
+                  <mat-option *ngFor="let budget of budgetRanges" [value]="budget.value">
+                    {{ budget.label }}
+                  </mat-option>
+                </mat-select>
+                <mat-error>{{ getFieldError(dietaryPreferencesForm, 'budgetRange') }}</mat-error>
+              </mat-form-field>
+            </div>
+
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Meal Prep Time</mat-label>
+              <mat-select formControlName="mealPrepTime" required>
+                <mat-option *ngFor="let time of mealPrepTimes" [value]="time.value">
+                  {{ time.label }}
+                </mat-option>
+              </mat-select>
+              <mat-error>{{ getFieldError(dietaryPreferencesForm, 'mealPrepTime') }}</mat-error>
+            </mat-form-field>
+          </form>
+        </mat-card-content>
+        
+        <mat-card-actions style="display: flex; justify-content: space-between;">
+          <button mat-button (click)="stepper.previous()" [disabled]="isLoading">Back</button>
+          <button mat-raised-button color="primary" 
+                  [disabled]="!dietaryPreferencesForm.valid || isLoading"
+                  (click)="onDietaryPreferencesSubmit()">
+            <mat-spinner *ngIf="isLoading" diameter="20" style="margin-right: 8px;"></mat-spinner>
+            {{ isLoading ? 'Creating Profile...' : 'Complete Profile' }}
+          </button>
+        </mat-card-actions>
+      </mat-card>
+    </mat-step>
+  </mat-stepper>
+</div>
