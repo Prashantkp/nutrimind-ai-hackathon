@@ -32,6 +32,13 @@ namespace NutriMind.Api.Api
             {
                 _logger.LogInformation("Creating user profile");
 
+                // Get authenticated user ID from token
+                var userId = _authService.GetUserIdFromRequest(req);
+                if (string.IsNullOrEmpty(userId))
+                {
+                    return await CreateErrorResponse(req, HttpStatusCode.Unauthorized, "Authentication required");
+                }
+
                 // Read request body
                 var requestBody = await new StreamReader(req.Body).ReadToEndAsync();
                 var createRequest = JsonConvert.DeserializeObject<CreateUserProfileRequest>(requestBody);
@@ -41,13 +48,17 @@ namespace NutriMind.Api.Api
                     return await CreateErrorResponse(req, HttpStatusCode.BadRequest, "Invalid request body");
                 }
 
-                // Generate user ID (in production, this would come from authentication)
-                var userId = Guid.NewGuid().ToString();
+                // Check if user profile already exists
+                var existingProfile = await _userProfileService.GetUserProfileAsync(userId);
+                if (existingProfile != null)
+                {
+                    return await CreateErrorResponse(req, HttpStatusCode.Conflict, "User profile already exists");
+                }
 
                 // Create user profile
                 var userProfile = new UserProfile
                 {
-                    Id = userId,
+                    Id = Guid.NewGuid().ToString(),
                     UserId = userId,
                     Email = createRequest.Email,
                     FirstName = createRequest.FirstName,

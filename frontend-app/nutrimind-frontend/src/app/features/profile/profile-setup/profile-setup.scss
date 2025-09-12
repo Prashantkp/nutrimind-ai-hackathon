@@ -1,0 +1,250 @@
+.profile-setup-container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 2rem;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+
+  .setup-header {
+    text-align: center;
+    margin-bottom: 2rem;
+    color: white;
+
+    h1 {
+      font-size: 2.5rem;
+      font-weight: 300;
+      margin-bottom: 0.5rem;
+    }
+
+    p {
+      font-size: 1.1rem;
+      opacity: 0.9;
+    }
+  }
+
+  .mat-stepper {
+    background: transparent;
+
+    .mat-step-header {
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
+      margin-bottom: 1rem;
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+
+      .mat-step-label {
+        color: white;
+        font-weight: 500;
+      }
+
+      .mat-step-icon {
+        background-color: rgba(255, 255, 255, 0.2);
+        color: white;
+      }
+
+      &.cdk-step-header-selected .mat-step-icon {
+        background-color: #4CAF50;
+        color: white;
+      }
+    }
+  }
+
+  .form-card {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    border-radius: 16px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    margin-bottom: 2rem;
+
+    mat-card-header {
+      margin-bottom: 1.5rem;
+
+      mat-card-title {
+        color: #333;
+        font-size: 1.5rem;
+        font-weight: 500;
+      }
+
+      mat-card-subtitle {
+        color: #666;
+        font-size: 1rem;
+      }
+    }
+
+    mat-card-content {
+      padding: 1.5rem;
+    }
+
+    mat-card-actions {
+      padding: 1rem 1.5rem;
+      background: rgba(0, 0, 0, 0.02);
+      border-top: 1px solid rgba(0, 0, 0, 0.08);
+    }
+  }
+
+  .form-row {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1rem;
+
+    @media (max-width: 768px) {
+      flex-direction: column;
+      gap: 0;
+    }
+  }
+
+  .half-width {
+    flex: 1;
+  }
+
+  .full-width {
+    width: 100%;
+    margin-bottom: 1rem;
+  }
+
+  .form-section {
+    margin-bottom: 2rem;
+
+    h3 {
+      color: #333;
+      font-size: 1.2rem;
+      font-weight: 500;
+      margin-bottom: 1rem;
+      border-bottom: 2px solid #e0e0e0;
+      padding-bottom: 0.5rem;
+    }
+  }
+
+  .checkbox-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+
+    mat-checkbox {
+      .mat-checkbox-label {
+        font-size: 0.95rem;
+        color: #555;
+      }
+
+      &.mat-checkbox-checked .mat-checkbox-background {
+        background-color: #667eea;
+      }
+    }
+
+    @media (max-width: 768px) {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  // Material Form Field Styling
+  mat-form-field {
+    .mat-form-field-outline {
+      color: rgba(0, 0, 0, 0.12);
+    }
+
+    &.mat-focused .mat-form-field-outline-thick {
+      color: #667eea;
+    }
+
+    .mat-form-field-label {
+      color: #666;
+    }
+
+    &.mat-focused .mat-form-field-label {
+      color: #667eea;
+    }
+
+    mat-error {
+      font-size: 0.85rem;
+    }
+
+    mat-hint {
+      color: #999;
+      font-size: 0.85rem;
+    }
+  }
+
+  // Button Styling
+  button {
+    border-radius: 25px;
+    text-transform: none;
+    font-weight: 500;
+    padding: 0.75rem 2rem;
+
+    &.mat-raised-button.mat-primary {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+
+      &:hover {
+        box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+      }
+
+      &:disabled {
+        background: #ccc;
+        color: #999;
+        box-shadow: none;
+      }
+    }
+
+    &.mat-button {
+      color: #667eea;
+    }
+  }
+
+  // Responsive Design
+  @media (max-width: 768px) {
+    padding: 1rem;
+
+    .setup-header h1 {
+      font-size: 2rem;
+    }
+
+    .form-card {
+      margin-bottom: 1rem;
+
+      mat-card-content {
+        padding: 1rem;
+      }
+
+      mat-card-actions {
+        padding: 1rem;
+      }
+    }
+  }
+
+  // Loading and Animation States
+  .form-card {
+    animation: slideInUp 0.5s ease-out;
+  }
+
+  @keyframes slideInUp {
+    from {
+      opacity: 0;
+      transform: translateY(30px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  // Stepper Line Styling
+  .mat-stepper-horizontal-line {
+    border-top-color: rgba(255, 255, 255, 0.3);
+  }
+}
+
+// Global overrides for this component
+.profile-setup-container {
+  .mat-step-header.cdk-step-header-selected .mat-step-label {
+    color: white;
+    font-weight: 600;
+  }
+
+  .mat-step-header.cdk-step-header-completed .mat-step-icon {
+    background-color: #4CAF50;
+  }
+}

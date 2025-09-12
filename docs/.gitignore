@@ -1,0 +1,66 @@
+# ===============================================
+# Documentation .gitignore
+# ===============================================
+
+# Generated documentation
+_build/
+_site/
+site/
+build/
+dist/
+
+# Sphinx documentation
+_build/
+_static/
+_templates/
+
+# Jekyll
+.jekyll-cache/
+.jekyll-metadata
+_site/
+
+# GitBook
+_book/
+node_modules/
+
+# VuePress
+.vuepress/dist/
+
+# Docusaurus
+.docusaurus/
+build/
+
+# MkDocs
+site/
+
+# Hugo
+public/
+resources/
+
+# Documentation tools cache
+.cache/
+
+# Temporary files
+*.tmp
+*.temp
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor files
+*.swp
+*.swo
+.vscode/
+.idea/
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+
+# Dependencies (if docs use npm/yarn)
+node_modules/
+package-lock.json
+yarn.lock

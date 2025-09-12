@@ -7,6 +7,7 @@ namespace NutriMind.Api.Services
     public interface IAuthService
     {
         string GenerateToken(string userId, string email);
+        string GenerateRefreshToken();
         ClaimsPrincipal? ValidateToken(string token);
         string? GetUserIdFromRequest(Microsoft.Azure.Functions.Worker.Http.HttpRequestData request);
         string? GetUserIdFromClaims(ClaimsPrincipal principal);
@@ -29,6 +30,11 @@ namespace NutriMind.Api.Services
         public string GenerateToken(string userId, string email)
         {
             return _jwtHelper.GenerateToken(userId, email);
+        }
+
+        public string GenerateRefreshToken()
+        {
+            return Guid.NewGuid().ToString() + Guid.NewGuid().ToString().Replace("-", "");
         }
 
         public ClaimsPrincipal? ValidateToken(string token)

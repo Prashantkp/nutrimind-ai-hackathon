@@ -10,18 +10,31 @@ var builder = FunctionsApplication.CreateBuilder(args);
 
 builder.ConfigureFunctionsWebApplication();
 
+// Add CORS services
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowLocalhost", policy =>
+    {
+        policy.WithOrigins("http://localhost:4200", "http://127.0.0.1:4200")
+              .AllowAnyMethod()
+              .AllowAnyHeader()
+              .AllowCredentials();
+    });
+});
+
 // Add services to the container
 builder.Services.AddHttpClient();
 
 // Add Entity Framework
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") 
-    ?? "Server=sqlsrv-nutrimind-ai-eastus2.database.windows.net;Database=sqldb-nutrimind-ai;User Id=nutrimind-admin;Password=Hackathon@2025;Encrypt=true;TrustServerCertificate=false;Connection Timeout=30;";
+    ?? "Server=sqlsrv-nutrimind-ai-eastus2.database.windows.net;Database=sqldb-nutrimind-ai;User Id=sqladminhack;Password=Hackathon@2025;Encrypt=true;TrustServerCertificate=false;Connection Timeout=30;";
 
 builder.Services.AddDbContext<NutriMindDbContext>(options =>
     options.UseSqlServer(connectionString));
 
 // Add custom services
 builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<ISearchService, SearchService>();
 builder.Services.AddScoped<IOpenAIService, OpenAIService>();
 builder.Services.AddScoped<IUserProfileService, UserProfileService>();
@@ -37,6 +50,9 @@ builder.Services.AddScoped<IIntegrationService, IntegrationService>();
 //     .ConfigureFunctionsApplicationInsights();
 
 var app = builder.Build();
+
+// Use CORS
+///app.UseCors("AllowLocalhost");
 
 // Auto-create database and tables if they don't exist
 using (var scope = app.Services.CreateScope())
