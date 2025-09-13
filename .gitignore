@@ -115,7 +115,7 @@ temp/
 *.h5
 *.pb
 *.onnx
-models/
+#models/
 checkpoints/
 
 # Docker
