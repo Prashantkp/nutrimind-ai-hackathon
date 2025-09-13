@@ -1,11 +1,17 @@
-using Azure.AI.OpenAI;
 using Azure;
+using Azure.AI.OpenAI;
+using Azure.Identity;
+using Azure.Security.KeyVault.Secrets;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using Microsoft.Identity.Client;
+using Newtonsoft.Json.Linq;
+using Newtonsoft.Json.Schema;
 using NutriMind.Api.Models;
+using OpenAI.Chat;
+using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using System.Text;
 
 namespace NutriMind.Api.Services
 {
@@ -22,16 +28,20 @@ namespace NutriMind.Api.Services
         private readonly AzureOpenAIClient _openAIClient;
         private readonly ILogger<OpenAIService> _logger;
         private readonly string _deploymentName;
+		private readonly ChatClient _chatClient;
+		private JSchema? _mealPlanSchema;
+        private readonly string _schemaPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Models", "MealPlanSchema.json");
 
-        public OpenAIService(IConfiguration configuration, ILogger<OpenAIService> logger)
+		public OpenAIService(IConfiguration configuration, ILogger<OpenAIService> logger)
         {
             _logger = logger;
-            
-            var endpoint = configuration["AZURE_OPENAI_ENDPOINT"];
-            var apiKey = configuration["AZURE_OPENAI_API_KEY"];
-            _deploymentName = configuration["AZURE_OPENAI_DEPLOYMENT"] ?? "gpt-4";
+			var keyVaultUri = configuration["KeyVaultUri"];
+			var kvClient = new SecretClient(new Uri(keyVaultUri), new DefaultAzureCredential());
+			var endpoint = kvClient.GetSecret("openai-endpoint").Value.Value; 
+            var apiKey = kvClient.GetSecret("openai-api-key").Value.Value;
+			_deploymentName = configuration["OpenAiDeployment"] ?? "gpt-5-mini";
 
-            if (string.IsNullOrEmpty(endpoint) || string.IsNullOrEmpty(apiKey))
+			if (string.IsNullOrEmpty(endpoint) || string.IsNullOrEmpty(apiKey))
             {
                 _logger.LogWarning("Azure OpenAI configuration is missing. AI functionality will use mock responses.");
                 _openAIClient = null!;
@@ -39,15 +49,173 @@ namespace NutriMind.Api.Services
             }
 
             _openAIClient = new AzureOpenAIClient(new Uri(endpoint), new AzureKeyCredential(apiKey));
-        }
+			_chatClient = _openAIClient.GetChatClient(_deploymentName);
+		}
 
         public async Task<string> GenerateWeeklyMealPlanAsync(UserProfile userProfile, List<Recipe> candidateRecipes)
         {
             _logger.LogInformation("Generating weekly meal plan for user {UserId}", userProfile.UserId);
-            
-            // Return mock response to avoid OpenAI client issues during development
-            return GenerateMockMealPlan(userProfile, candidateRecipes);
+
+			// Return mock response to avoid OpenAI client issues during development
+			//return GenerateMockMealPlan(userProfile, candidateRecipes);
+
+			// Build the system prompt with schema and requirements
+			var systemPrompt = await BuildSystemPrompt(userProfile);
+
+			// Build the user prompt with recipes and user preferences
+			var userPrompt = BuildUserPrompt(userProfile, candidateRecipes);
+
+			//_logger.LogInformation($"System prompt length: {systemPrompt.Length}, User prompt length: {userPrompt.Length}");
+
+
+			List<ChatMessage> messages = new List<ChatMessage>()
+			{
+				new SystemChatMessage(systemPrompt),
+				new UserChatMessage(userPrompt),
+			};
+
+			// Support for this recently-launched model with MaxOutputTokenCount parameter requires
+			// Azure.AI.OpenAI 2.2.0-beta.4 and SetNewMaxCompletionTokensPropertyEnabled
+			//var requestOptions = new ChatCompletionOptions()
+			//{
+			//	MaxOutputTokenCount = 10000,
+			//};
+
+			var response = _chatClient.CompleteChat(messages);
+			System.Console.WriteLine(response.Value.Content[0].Text);
+			return response.Value.Content[0].Text;
+		}
+
+		public bool ValidateMealPlan(string jsonContent, out IList<string> errors)
+		{
+			var schema = JSchema.Parse(File.ReadAllText(_schemaPath));
+			var json = JObject.Parse(jsonContent);
+			return json.IsValid(schema, out errors);
+		}
+
+		private async Task LoadSchemaAsync()
+		{
+			if (_mealPlanSchema != null)
+				return;
+
+			try
+			{
+
+				// Load schema from embedded resource or file
+				//var schemaPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Models", "MealPlanSchema.json");
+				var schemaJson = await File.ReadAllTextAsync(_schemaPath);
+
+				_mealPlanSchema = JSchema.Parse(schemaJson);
+
+			}
+			catch (Exception ex)
+			{
+				throw;
+			}
+		}
+
+		/// <summary>
+		/// Builds the system prompt with instructions and schema
+		/// </summary>
+		private async Task<string> BuildSystemPrompt(UserProfile userInput)
+		{
+			await LoadSchemaAsync();
+			var prompt = new StringBuilder();
+
+			prompt.AppendLine("You are an expert nutritionist and meal planner AI assistant. Your task is to create a personalized meal plan based on user preferences and available recipes.");
+			prompt.AppendLine();
+			prompt.AppendLine("IMPORTANT INSTRUCTIONS:");
+			prompt.AppendLine("1. You MUST respond with valid JSON that exactly matches the provided schema");
+			prompt.AppendLine("2. Use only the recipes provided in the user's message");
+			prompt.AppendLine("3. Ensure the total daily calories are close to the user's target");
+			prompt.AppendLine("4. Respect all dietary preferences, allergens, and dislikes");
+			prompt.AppendLine("5. Balance macronutrients appropriately");
+			prompt.AppendLine("6. Include variety across meals and days");
+			prompt.AppendLine("7. Provide realistic serving sizes");
+			prompt.AppendLine();
+			prompt.AppendLine("JSON SCHEMA TO FOLLOW:");
+			prompt.AppendLine("Your response must be a valid JSON object matching this exact schema:");
+			prompt.AppendLine();
+
+			// Include the schema in the prompt
+			if (_mealPlanSchema != null)
+			{
+				prompt.AppendLine(_mealPlanSchema.ToString());
+			}
+
+			prompt.AppendLine();
+			prompt.AppendLine("RESPONSE FORMAT:");
+			prompt.AppendLine("Respond ONLY with the JSON object. Do not include any explanatory text before or after the JSON.");
+
+			return prompt.ToString();
+		}
+
+        /// <summary>
+        /// Builds the user prompt with preferences and available recipes
+        /// </summary>
+        private string BuildUserPrompt(UserProfile userInput, List<Recipe> recipes)
+        {
+            var prompt = new StringBuilder();
+
+            prompt.AppendLine("Please create a meal plan with the following requirements:");
+            prompt.AppendLine();
+            prompt.AppendLine("USER PREFERENCES:");
+            prompt.AppendLine($"- Target calories per day: {userInput.TargetCalories}");
+            prompt.AppendLine($"- Dietary preference: {userInput.DietaryPreference}");
+            prompt.AppendLine($"- Number of meals per day: {3}");
+            prompt.AppendLine($"- Number of days to plan: {7}");
+
+            if (userInput.Allergens?.Any() == true)
+            {
+                prompt.AppendLine($"- Allergens to avoid: {string.Join(", ", userInput.Allergens)}");
+            }
+
+            if (userInput.Dislikes?.Any() == true)
+            {
+                prompt.AppendLine($"- Dislikes to avoid: {string.Join(", ", userInput.Dislikes)}");
+            }
+
+            prompt.AppendLine();
+            prompt.AppendLine("AVAILABLE RECIPES:");
+
+			//Group recipes by meal type for better organization
+
+			// var recipesByMealType = recipes.GroupBy(r => r.MealType).ToList();
+			var recipesByMealType = recipes.ToList();
+			foreach (var recipe in recipesByMealType)
+			{
+				prompt.AppendLine($"\n RECIPES:");
+
+				//foreach (var recipe in mealGroup.Take(15)) // Limit to prevent token overflow
+				//{
+				prompt.AppendLine($"\nRecipe ID: {recipe.Id}");
+				prompt.AppendLine($"Name: {recipe.Name}");
+				prompt.AppendLine($"Calories: {recipe.Calories}");
+				prompt.AppendLine($"Servings: {recipe.Servings}");
+				prompt.AppendLine($"Total time: {recipe.TotalTime} min");
+				prompt.AppendLine($"Difficulty: {recipe.Difficulty}");
+				prompt.AppendLine($"Cuisine: {recipe.Cuisine}");
+
+				if (recipe.Tags?.Any() == true)
+				{
+					prompt.AppendLine($"Tags: {string.Join(", ", recipe.Tags)}");
+				}
+
+				if (recipe.Ingredients?.Any() == true)
+				{
+					prompt.AppendLine($"Key ingredients: {string.Join(", ", recipe.Ingredients.Take(5).Select(i => i.Item ?? i.ToString()))}");
+				}
+
+				prompt.AppendLine($"Source: {recipe.Source}");
+				//}
+			}
+
+			prompt.AppendLine();
+            prompt.AppendLine("Create a balanced meal plan using these recipes. Ensure variety, nutritional balance, and adherence to all user preferences.");
+
+            return prompt.ToString();
         }
+
 
         public async Task<MealPlan> ParseMealPlanResponseAsync(string aiResponse, string userId, string weekIdentifier)
         {
@@ -98,31 +266,31 @@ namespace NutriMind.Api.Services
             };
         }
 
-        private string BuildUserPrompt(UserProfile userProfile, List<Recipe> candidateRecipes)
-        {
-            var sb = new StringBuilder();
-            
-            sb.AppendLine($"User Profile:");
-            sb.AppendLine($"- Age: {userProfile.Age}, Weight: {userProfile.Weight}kg, Height: {userProfile.Height}cm");
-            sb.AppendLine($"- Activity Level: {userProfile.ActivityLevel}");
-            sb.AppendLine($"- Dietary Preference: {userProfile.DietaryPreference}");
-            sb.AppendLine($"- Allergens: {string.Join(", ", userProfile.Allergens)}");
-            sb.AppendLine($"- Dislikes: {string.Join(", ", userProfile.Dislikes)}");
-            sb.AppendLine($"- Target Calories: {userProfile.TargetCalories} per day");
-            sb.AppendLine($"- Cooking Skill: {userProfile.CookingSkillLevel}");
-            sb.AppendLine($"- Max Cooking Time: {userProfile.CookingTimePreference} minutes");
-            sb.AppendLine($"- Weekly Budget: ${userProfile.BudgetPerWeek}");
-            sb.AppendLine();
+   //     private string BuildUserPrompt(UserProfile userProfile, List<Recipe> candidateRecipes)
+   //     {
+   //         var sb = new StringBuilder();
+			//sb.AppendLine("Please create a meal plan with the following requirements:");
+			//sb.AppendLine($"User Profile:");
+   //         sb.AppendLine($"- Age: {userProfile.Age}, Weight: {userProfile.Weight}kg, Height: {userProfile.Height}cm");
+   //         sb.AppendLine($"- Activity Level: {userProfile.ActivityLevel}");
+   //         sb.AppendLine($"- Dietary Preference: {userProfile.DietaryPreference}");
+   //         sb.AppendLine($"- Allergens: {string.Join(", ", userProfile.Allergens)}");
+   //         sb.AppendLine($"- Dislikes: {string.Join(", ", userProfile.Dislikes)}");
+   //         sb.AppendLine($"- Target Calories: {userProfile.TargetCalories} per day");
+   //         sb.AppendLine($"- Cooking Skill: {userProfile.CookingSkillLevel}");
+   //         sb.AppendLine($"- Max Cooking Time: {userProfile.CookingTimePreference} minutes");
+   //         sb.AppendLine($"- Weekly Budget: ${userProfile.BudgetPerWeek}");
+   //         sb.AppendLine();
 
-            sb.AppendLine($"Available Recipes ({candidateRecipes.Count} total):");
-            foreach (var recipe in candidateRecipes.Take(20)) // Limit to prevent prompt overflow
-            {
-                sb.AppendLine($"- ID: {recipe.Id}, Name: {recipe.Name}, Calories: {recipe.Calories}, " +
-                             $"Vegan: {recipe.IsVegan}, Keto: {recipe.IsKeto}, Time: {recipe.TotalTime}min");
-            }
+   //         sb.AppendLine($"Available Recipes ({candidateRecipes.Count} total):");
+   //         foreach (var recipe in candidateRecipes.Take(20)) // Limit to prevent prompt overflow
+   //         {
+   //             sb.AppendLine($"- ID: {recipe.Id}, Name: {recipe.Name}, Calories: {recipe.Calories}, " +
+   //                          $"Vegan: {recipe.IsVegan}, Keto: {recipe.IsKeto}, Time: {recipe.TotalTime}min");
+   //         }
 
-            return sb.ToString();
-        }
+   //         return sb.ToString();
+   //     }
 
         private string GenerateMockMealPlan()
         {

@@ -5,7 +5,11 @@
         "FUNCTIONS_WORKER_RUNTIME": "dotnet-isolated",
         "JWT_SECRET_KEY": "your-super-secret-development-key-change-in-production-12345",
         "JWT_ISSUER": "nutrimind-api-dev",
-        "JWT_AUDIENCE": "nutrimind-app-dev"
+        "JWT_AUDIENCE": "nutrimind-app-dev",
+        "KeyVaultUri": "https://kv-nutrimind-ai.vault.azure.net/",
+        "SearchEndpoint": "https://srch-nutrimind-ai-hackathon-eastus2.search.windows.net",
+        "AzureSearchIndex": "azureblob-index",
+        "OpenAiDeployment": "gpt-5-mini"
     },
 
     "Host": {
