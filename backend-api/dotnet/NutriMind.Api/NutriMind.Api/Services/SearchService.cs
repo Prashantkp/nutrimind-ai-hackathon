@@ -1,6 +1,8 @@
 using Azure;
+using Azure.Identity;
 using Azure.Search.Documents;
 using Azure.Search.Documents.Models;
+using Azure.Security.KeyVault.Secrets;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using NutriMind.Api.Models;
@@ -23,10 +25,11 @@ namespace NutriMind.Api.Services
         public SearchService(IConfiguration configuration, ILogger<SearchService> logger)
         {
             _logger = logger;
-            
-            var endpoint = configuration["AZURE_SEARCH_ENDPOINT"];
-            var apiKey = configuration["AZURE_SEARCH_API_KEY"];
-            var indexName = configuration["AZURE_SEARCH_INDEX"] ?? "recipes-index";
+			var keyVaultUri = configuration["KeyVaultUri"];
+			var kvClient = new SecretClient(new Uri(keyVaultUri), new DefaultAzureCredential());
+			var endpoint = configuration["SearchEndpoint"];
+            var apiKey = kvClient.GetSecret("ai-search-key").Value.Value;
+            var indexName = configuration["AzureSearchIndex"] ?? "azureblob-index";
 
             if (string.IsNullOrEmpty(endpoint) || string.IsNullOrEmpty(apiKey))
             {
@@ -92,8 +95,9 @@ namespace NutriMind.Api.Services
                         searchOptions.Filter = string.Join(" and ", filterExpressions);
                 }
 
-                var response = await _searchClient.SearchAsync<Recipe>(query, searchOptions);
-                var recipes = new List<Recipe>();
+				//var response = await _searchClient.SearchAsync<Recipe>(query, searchOptions);
+				var response = await _searchClient.SearchAsync<Recipe>("*", searchOptions);
+				var recipes = new List<Recipe>();
 
                 await foreach (var result in response.Value.GetResultsAsync())
                 {
