@@ -30,7 +30,8 @@ namespace NutriMind.Api.Activities
                     input.DietaryPreference,
                     input.Allergens,
                     input.Dislikes,
-                    input.MaxRecipes
+                    input.MaxRecipes,
+                    input.MaxCaloriesPerMeal ?? 500
                 );
 
                 // Additional filtering based on user preferences

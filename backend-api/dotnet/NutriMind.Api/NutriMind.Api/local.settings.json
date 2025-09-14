@@ -8,7 +8,7 @@
         "JWT_AUDIENCE": "nutrimind-app-dev",
         "KeyVaultUri": "https://kv-nutrimind-ai.vault.azure.net/",
         "SearchEndpoint": "https://srch-nutrimind-ai-hackathon-eastus2.search.windows.net",
-        "AzureSearchIndex": "azureblob-index",
+        "AzureSearchIndex": "reciepe-index-new",
         "OpenAiDeployment": "gpt-5-mini"
     },
 

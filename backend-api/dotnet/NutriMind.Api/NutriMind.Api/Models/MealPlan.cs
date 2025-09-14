@@ -1,4 +1,5 @@
 using System.Text.Json.Serialization;
+using System.Text.Json;
 using Newtonsoft.Json;
 
 namespace NutriMind.Api.Models
@@ -179,12 +180,16 @@ namespace NutriMind.Api.Models
     public class Ingredient
     {
         [JsonProperty("item")]
+        [JsonPropertyName("item")]
         public string Item { get; set; } = string.Empty;
 
         [JsonProperty("qty")]
+        [JsonPropertyName("qty")]
+        [System.Text.Json.Serialization.JsonConverter(typeof(FlexibleStringConverter))]
         public string Qty { get; set; } = string.Empty;
 
         [JsonProperty("unit")]
+        [JsonPropertyName("unit")]
         public string Unit { get; set; } = string.Empty;
 
         [JsonProperty("category")]
@@ -336,5 +341,30 @@ namespace NutriMind.Api.Models
 
         [JsonProperty("errors")]
         public List<string> Errors { get; set; } = new();
+    }
+
+    /// <summary>
+    /// Custom JSON converter that handles both string and numeric values for string properties
+    /// This allows AI-generated JSON to use numeric qty values while parsing them as strings
+    /// </summary>
+    public class FlexibleStringConverter : System.Text.Json.Serialization.JsonConverter<string>
+    {
+        public override string? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+        {
+            return reader.TokenType switch
+            {
+                JsonTokenType.String => reader.GetString(),
+                JsonTokenType.Number => reader.GetDecimal().ToString(),
+                JsonTokenType.True => "true",
+                JsonTokenType.False => "false",
+                JsonTokenType.Null => null,
+                _ => null // Fallback for unsupported types
+            };
+        }
+
+        public override void Write(Utf8JsonWriter writer, string value, JsonSerializerOptions options)
+        {
+            writer.WriteStringValue(value);
+        }
     }
 }
