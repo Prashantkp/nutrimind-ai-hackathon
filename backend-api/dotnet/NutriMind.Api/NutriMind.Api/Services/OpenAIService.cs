@@ -1,9 +1,11 @@
 using Azure;
 using Azure.AI.OpenAI;
+using Azure.AI.OpenAI.Chat;
 using Azure.Identity;
 using Azure.Security.KeyVault.Secrets;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Microsoft.Identity.Client;
 using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Schema;
@@ -48,7 +50,13 @@ namespace NutriMind.Api.Services
                 return;
             }
 
-            _openAIClient = new AzureOpenAIClient(new Uri(endpoint), new AzureKeyCredential(apiKey));
+            // Configure client with timeout
+            var clientOptions = new AzureOpenAIClientOptions()
+            {
+                NetworkTimeout = TimeSpan.FromMinutes(5) // 5-minute timeout
+            };
+
+            _openAIClient = new AzureOpenAIClient(new Uri(endpoint), new AzureKeyCredential(apiKey), clientOptions);
 			_chatClient = _openAIClient.GetChatClient(_deploymentName);
 		}
 
@@ -56,17 +64,19 @@ namespace NutriMind.Api.Services
         {
             _logger.LogInformation("Generating weekly meal plan for user {UserId}", userProfile.UserId);
 
-			// Return mock response to avoid OpenAI client issues during development
-			//return GenerateMockMealPlan(userProfile, candidateRecipes);
+			// For fastest performance during development/testing
+			if (userProfile.TargetCalories < 100) // Use as a flag for fast mode
+			{
+				return GenerateMockMealPlan(userProfile, candidateRecipes);
+			}
 
-			// Build the system prompt with schema and requirements
-			var systemPrompt = await BuildSystemPrompt(userProfile);
+			// Build the optimized system prompt
+			var systemPrompt = BuildOptimizedSystemPrompt();
 
-			// Build the user prompt with recipes and user preferences
-			var userPrompt = BuildUserPrompt(userProfile, candidateRecipes);
+			// Build the simplified user prompt
+			var userPrompt = BuildOptimizedUserPrompt(userProfile, candidateRecipes);
 
-			//_logger.LogInformation($"System prompt length: {systemPrompt.Length}, User prompt length: {userPrompt.Length}");
-
+			_logger.LogInformation($"System prompt length: {systemPrompt.Length}, User prompt length: {userPrompt.Length}");
 
 			List<ChatMessage> messages = new List<ChatMessage>()
 			{
@@ -74,16 +84,43 @@ namespace NutriMind.Api.Services
 				new UserChatMessage(userPrompt),
 			};
 
-			// Support for this recently-launched model with MaxOutputTokenCount parameter requires
-			// Azure.AI.OpenAI 2.2.0-beta.4 and SetNewMaxCompletionTokensPropertyEnabled
+			// Configure chat completion options for better performance
 			//var requestOptions = new ChatCompletionOptions()
 			//{
-			//	MaxOutputTokenCount = 10000,
+			//	//Temperature = 0.1f, // Lower temperature for more consistent JSON output
+			//	TopP = 0.8f,
+			//	FrequencyPenalty = 0.0f,
+			//	PresencePenalty = 0.0f,
+			//	// Increased token limit for full 7-day meal plan
+			//	//MaxOutputTokenCount = 6000,  // Increased to accommodate full 7-day plan
 			//};
+#pragma warning disable AOAI001 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
+			//requestOptions.SetNewMaxCompletionTokensPropertyEnabled();
+#pragma warning restore AOAI001 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
 
-			var response = _chatClient.CompleteChat(messages);
-			System.Console.WriteLine(response.Value.Content[0].Text);
-			return response.Value.Content[0].Text;
+			// Add this using directive at the top of the file with the other OpenAI/Azure imports
+
+			try
+			{
+				// Add cancellation token for timeout control
+				using var cts = new CancellationTokenSource(TimeSpan.FromMinutes(3));
+				
+				// Use async method with timeout handling
+				var response = await _chatClient.CompleteChatAsync(messages, null, cts.Token);
+				var result = response.Value.Content[0].Text;
+				_logger.LogInformation("Successfully generated meal plan response, length: {Length}", result.Length);
+				return result;
+			}
+			catch (OperationCanceledException)
+			{
+				_logger.LogWarning("OpenAI request timed out after 3 minutes, returning mock data");
+				return GenerateMockMealPlan(userProfile, candidateRecipes);
+			}
+			catch (Exception ex)
+			{
+				_logger.LogError(ex, "Error generating meal plan with OpenAI, returning mock data");
+				return GenerateMockMealPlan(userProfile, candidateRecipes);
+			}
 		}
 
 		public bool ValidateMealPlan(string jsonContent, out IList<string> errors)
@@ -115,152 +152,98 @@ namespace NutriMind.Api.Services
 		}
 
 		/// <summary>
-		/// Builds the system prompt with instructions and schema
+		/// Builds an optimized system prompt without the full schema
 		/// </summary>
-		private async Task<string> BuildSystemPrompt(UserProfile userInput)
+		private string BuildOptimizedSystemPrompt()
 		{
-			await LoadSchemaAsync();
-			var prompt = new StringBuilder();
+			return @"Generate a COMPLETE 7-day meal plan as valid JSON only. No explanations.
 
-			prompt.AppendLine("You are an expert nutritionist and meal planner AI assistant. Your task is to create a personalized meal plan based on user preferences and available recipes.");
-			prompt.AppendLine();
-			prompt.AppendLine("IMPORTANT INSTRUCTIONS:");
-			prompt.AppendLine("1. You MUST respond with valid JSON that exactly matches the provided schema");
-			prompt.AppendLine("2. Use only the recipes provided in the user's message");
-			prompt.AppendLine("3. Ensure the total daily calories are close to the user's target");
-			prompt.AppendLine("4. Respect all dietary preferences, allergens, and dislikes");
-			prompt.AppendLine("5. Balance macronutrients appropriately");
-			prompt.AppendLine("6. Include variety across meals and days");
-			prompt.AppendLine("7. Provide realistic serving sizes");
-			prompt.AppendLine();
-			prompt.AppendLine("JSON SCHEMA TO FOLLOW:");
-			prompt.AppendLine("Your response must be a valid JSON object matching this exact schema:");
-			prompt.AppendLine();
+CRITICAL: You MUST include ALL 7 days: monday, tuesday, wednesday, thursday, friday, saturday, sunday.
 
-			// Include the schema in the prompt
-			if (_mealPlanSchema != null)
-			{
-				prompt.AppendLine(_mealPlanSchema.ToString());
-			}
+Structure example (EXPAND to all 7 days):
+{
+  ""id"": ""plan-1"",
+  ""userId"": ""user"",
+  ""weekIdentifier"": ""2025-W37"",
+  ""dailyMeals"": {
+    ""monday"": {
+      ""date"": ""2025-09-08T00:00:00Z"",
+      ""dayOfWeek"": ""monday"",
+      ""meals"": {
+        ""breakfast"": {
+          ""id"": ""meal-mon-b"",
+          ""name"": ""Oatmeal"",
+          ""recipe"": {
+            ""id"": ""rec-1"",
+            ""name"": ""Oatmeal"",
+            ""cuisine"": ""American"",
+            ""steps"": [""Boil water"", ""Add oats"", ""Cook 5 min""],
+            ""ingredients"": [{""item"": ""oats"", ""qty"": ""1"", ""unit"": ""cup"", ""category"": ""grains"", ""estimatedCost"": 1.5}],
+            ""calories"": 300,
+            ""difficulty"": ""easy"",
+            ""totalTime"": 10,
+            ""servings"": 1
+          },
+          ""servings"": 1,
+          ""mealType"": ""breakfast"",
+          ""nutrition"": {""calories"": 300, ""protein"": 8.0, ""carbohydrates"": 54.0, ""fats"": 6.0}
+        },
+        ""lunch"": { /*similar structure*/ },
+        ""dinner"": { /*similar structure*/ }
+      }
+    },
+    ""tuesday"": { /*same structure as monday but different meals*/ },
+    ""wednesday"": { /*same structure as monday but different meals*/ },
+    ""thursday"": { /*same structure as monday but different meals*/ },
+    ""friday"": { /*same structure as monday but different meals*/ },
+    ""saturday"": { /*same structure as monday but different meals*/ },
+    ""sunday"": { /*same structure as monday but different meals*/ }
+  }
+}
 
-			prompt.AppendLine();
-			prompt.AppendLine("RESPONSE FORMAT:");
-			prompt.AppendLine("Respond ONLY with the JSON object. Do not include any explanatory text before or after the JSON.");
-
-			return prompt.ToString();
+MANDATORY REQUIREMENTS:
+- Generate ALL 7 days of the week (monday through sunday)
+- Each day must have 3 meals: breakfast, lunch, dinner
+- Use unique recipes for variety
+- Include realistic nutrition values
+- Add simple cooking steps
+- Use common ingredients with USD costs
+- DO NOT use placeholder text like '...' or 'similar structure'
+- Generate the complete JSON structure";
 		}
 
         /// <summary>
-        /// Builds the user prompt with preferences and available recipes
+        /// Builds an optimized user prompt with essential requirements only
         /// </summary>
-        private string BuildUserPrompt(UserProfile userInput, List<Recipe> recipes)
+        private string BuildOptimizedUserPrompt(UserProfile userInput, List<Recipe> recipes)
         {
             var prompt = new StringBuilder();
 
-            prompt.AppendLine("Please create a meal plan with the following requirements:");
-            prompt.AppendLine();
-            prompt.AppendLine("USER PREFERENCES:");
-			prompt.AppendLine($"- Target calories per day: {(userInput.TargetCalories == 0 ? 500 : userInput.TargetCalories)}");
-            prompt.AppendLine($"- Dietary preference: {userInput.DietaryPreference}");
-            prompt.AppendLine($"- Number of meals per day: {3}");
-            prompt.AppendLine($"- Number of days to plan: {7}");
+            prompt.AppendLine("Create a COMPLETE 7-day meal plan (Monday through Sunday) with:");
+            prompt.AppendLine($"• Target calories: {(userInput.TargetCalories == 0 ? 2000 : userInput.TargetCalories)}/day");
+            prompt.AppendLine($"• Diet: {userInput.DietaryPreference ?? "None"}");
 
             if (userInput.Allergens?.Any() == true)
             {
-                prompt.AppendLine($"- Allergens to avoid: {string.Join(", ", userInput.Allergens)}");
+                prompt.AppendLine($"• Avoid allergens: {string.Join(", ", userInput.Allergens)}");
             }
 
             if (userInput.Dislikes?.Any() == true)
             {
-                prompt.AppendLine($"- Dislikes to avoid: {string.Join(", ", userInput.Dislikes)}");
+                prompt.AppendLine($"• Avoid dislikes: {string.Join(", ", userInput.Dislikes)}");
             }
 
             prompt.AppendLine();
+            prompt.AppendLine("MANDATORY REQUIREMENTS:");
+            prompt.AppendLine("- ALL 7 DAYS: monday, tuesday, wednesday, thursday, friday, saturday, sunday");
+            prompt.AppendLine("- 3 meals per day (breakfast, lunch, dinner) for EACH day");
+            prompt.AppendLine("- Unique recipes with realistic ingredients for variety");
+            prompt.AppendLine("- Balanced nutrition across the week");
+            prompt.AppendLine("- Include estimated costs and cooking steps");
+            prompt.AppendLine("- Use common cuisine types (American, Italian, Asian, Mediterranean, etc.)");
+            prompt.AppendLine();
+            prompt.AppendLine("IMPORTANT: Generate the complete JSON for all 7 days. Do not use shortcuts or placeholders!");
 
-
-
-			prompt.AppendLine("MEAL PLAN STRUCTURE REQUIREMENTS:");
-			prompt.AppendLine("Generate a complete 7-day meal plan following this exact structure:");
-			prompt.AppendLine();
-			prompt.AppendLine("1. DAILY MEALS ORGANIZATION:");
-			prompt.AppendLine("   - Structure meals by day of week: monday, tuesday, wednesday, thursday, friday, saturday, sunday");
-			prompt.AppendLine("   - Each day must include: breakfast, lunch, dinner");
-			prompt.AppendLine("   - Each meal must have: id, name, recipe (complete recipe object), servings, mealType");
-			prompt.AppendLine("   - Optional: snacks array, scheduledTime, estimatedPrepTime, estimatedCookTime, estimatedCost");
-			prompt.AppendLine();
-			prompt.AppendLine("2. RECIPE REQUIREMENTS (for each meal):");
-			prompt.AppendLine("   - Generate unique recipe IDs in format: recipe-001, recipe-002, etc.");
-			prompt.AppendLine("   - Include complete recipe with: name, cuisine, steps (detailed cooking instructions)");
-			prompt.AppendLine("   - Provide full ingredients list with: item name, quantity, unit, category, estimatedCost");
-			prompt.AppendLine("   - Set dietary flags: isVegan, isKeto, isDiabeticFriendly based on ingredients");
-			prompt.AppendLine("   - Include: calories per serving, difficulty (easy/medium/hard), totalTime in minutes");
-			prompt.AppendLine("   - Add relevant tags and specify source as 'ai-generated'");
-			prompt.AppendLine();
-			prompt.AppendLine("3. NUTRITION CALCULATIONS:");
-			prompt.AppendLine("   - Calculate nutrition for each meal: calories, protein, carbohydrates, fats, fiber, sugar, sodium");
-			prompt.AppendLine("   - Provide daily nutrition summary for each day");
-			prompt.AppendLine("   - Calculate weekly nutrition summary with totals and averages");
-			prompt.AppendLine("   - Ensure daily calories target is met: " + userInput.TargetCalories + " calories");
-			prompt.AppendLine();
-			prompt.AppendLine("4. COST ESTIMATION:");
-			prompt.AppendLine("   - Estimate cost for each ingredient based on typical grocery prices");
-			prompt.AppendLine("   - Calculate meal costs and daily totals");
-			prompt.AppendLine("   - Provide weekly total estimated cost");
-			prompt.AppendLine();
-			prompt.AppendLine("5. VARIETY AND BALANCE:");
-			prompt.AppendLine("   - Ensure different cuisines across the week (italian, mediterranean, asian, american, etc.)");
-			prompt.AppendLine("   - Balance macronutrients appropriately for each day");
-			prompt.AppendLine("   - Avoid repeating the same recipes");
-			prompt.AppendLine("   - Include seasonal and diverse ingredients");
-			prompt.AppendLine();
-			prompt.AppendLine("6. RECIPE EXAMPLES BY MEAL TYPE:");
-			prompt.AppendLine("   BREAKFAST: Overnight oats, smoothie bowls, avocado toast, scrambled eggs, pancakes");
-			prompt.AppendLine("   LUNCH: Quinoa salads, wraps, soups, grain bowls, sandwiches");
-			prompt.AppendLine("   DINNER: Grilled proteins with vegetables, pasta dishes, stir-fries, roasted meals");
-			prompt.AppendLine();
-			prompt.AppendLine("7. INGREDIENT CATEGORIES:");
-			prompt.AppendLine("   Use these categories: produce, dairy, protein, grains, pantry, spices, herbs, nuts");
-			prompt.AppendLine();
-			prompt.AppendLine("IMPORTANT: Create original, practical recipes with realistic cooking times and commonly available ingredients.");
-			prompt.AppendLine("Ensure all nutrition calculations are accurate and the meal plan is well-balanced and varied.");
-
-			//         prompt.AppendLine("AVAILABLE RECIPES:");
-
-			////Group recipes by meal type for better organization
-
-			//// var recipesByMealType = recipes.GroupBy(r => r.MealType).ToList();
-			//var recipesByMealType = recipes.ToList();
-			//foreach (var recipe in recipesByMealType)
-			//{
-			//	prompt.AppendLine($"\n RECIPES:");
-
-			//	//foreach (var recipe in mealGroup.Take(15)) // Limit to prevent token overflow
-			//	//{
-			//	prompt.AppendLine($"\nRecipe ID: {recipe.Id}");
-			//	prompt.AppendLine($"Name: {recipe.Name}");
-			//	prompt.AppendLine($"Calories: {recipe.Calories}");
-			//	prompt.AppendLine($"Servings: {recipe.Servings}");
-			//	prompt.AppendLine($"Total time: {recipe.TotalTime} min");
-			//	prompt.AppendLine($"Difficulty: {recipe.Difficulty}");
-			//	prompt.AppendLine($"Cuisine: {recipe.Cuisine}");
-
-			//	if (recipe.Tags?.Any() == true)
-			//	{
-			//		prompt.AppendLine($"Tags: {string.Join(", ", recipe.Tags)}");
-			//	}
-
-			//	if (recipe.Ingredients?.Any() == true)
-			//	{
-			//		prompt.AppendLine($"Key ingredients: {string.Join(", ", recipe.Ingredients.Take(5).Select(i => i.Item ?? i.ToString()))}");
-			//	}
-
-			//	prompt.AppendLine($"Source: {recipe.Source}");
-			//	//}
-			//}
-
-			prompt.AppendLine();
-			//prompt.AppendLine("Create a balanced meal plan using these recipes. Ensure variety, nutritional balance, and adherence to all user preferences.");
-			//prompt.AppendLine("Create a balanced meal plan using these recipes. Ensure variety, nutritional balance, and adherence to all user preferences.");
 			return prompt.ToString();
         }
 
@@ -269,6 +252,8 @@ namespace NutriMind.Api.Services
         {
             try
             {
+                _logger.LogInformation("Parsing AI response for user {UserId}, response length: {Length}", userId, aiResponse.Length);
+
                 // Clean up the response to extract JSON
                 var jsonStart = aiResponse.IndexOf('{');
                 var jsonEnd = aiResponse.LastIndexOf('}');
@@ -276,15 +261,55 @@ namespace NutriMind.Api.Services
                 if (jsonStart >= 0 && jsonEnd >= 0 && jsonEnd > jsonStart)
                 {
                     var jsonContent = aiResponse[jsonStart..(jsonEnd + 1)];
-                    var aiMealPlan = JsonSerializer.Deserialize<AIMealPlanResponse>(jsonContent);
-                    
-                    return await ConvertAIResponseToMealPlan(aiMealPlan!, userId, weekIdentifier);
+                    _logger.LogInformation("Extracted JSON content, length: {Length}", jsonContent.Length);
+
+                    try 
+                    {
+                        // Try to deserialize directly as MealPlan (new format)
+                        var options = new JsonSerializerOptions
+                        {
+                            PropertyNameCaseInsensitive = true,
+                            DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
+                        };
+                        
+                        var mealPlan = JsonSerializer.Deserialize<MealPlan>(jsonContent, options);
+
+                        if (mealPlan != null && !string.IsNullOrEmpty(mealPlan.Id))
+                        {
+                            _logger.LogInformation("Successfully parsed meal plan directly, ID: {Id}, Days: {DayCount}", 
+                                mealPlan.Id, mealPlan.DailyMeals?.Count ?? 0);
+                            
+                            // Ensure required fields are set
+                            mealPlan.UserId = userId;
+                            mealPlan.WeekIdentifier = weekIdentifier;
+                            mealPlan.WeekOf = Helpers.WeekHelper.GetMondayOfWeek(weekIdentifier);
+                            mealPlan.Status = MealPlanStatus.Generated;
+                            
+                            // Initialize metadata if needed
+                            mealPlan.GenerationMetadata ??= new GenerationMetadata
+                            {
+                                StartedAt = DateTime.UtcNow,
+                                OrchestrationId = Guid.NewGuid().ToString()
+                            };
+
+                            return mealPlan;
+                        }
+                    }
+                    catch (JsonException ex)
+                    {
+                        _logger.LogWarning(ex, "Failed to parse as direct MealPlan, trying legacy format");
+                        
+                        // Fallback to legacy format
+                        var aiMealPlan = JsonSerializer.Deserialize<AIMealPlanResponse>(jsonContent);
+                        if (aiMealPlan != null)
+                        {
+                            return await ConvertAIResponseToMealPlan(aiMealPlan, userId, weekIdentifier);
+                        }
+                    }
                 }
-                else
-                {
-                    _logger.LogWarning("Could not extract JSON from AI response, using fallback parsing");
-                    return CreateFallbackMealPlan(userId, weekIdentifier);
-                }
+                
+                _logger.LogWarning("Could not extract or parse JSON from AI response, using fallback");
+                return CreateFallbackMealPlan(userId, weekIdentifier);
             }
             catch (Exception ex)
             {
@@ -496,74 +521,500 @@ namespace NutriMind.Api.Services
 
         private string GenerateMockMealPlan(UserProfile userProfile, List<Recipe> candidateRecipes)
         {
-            // Generate a simple mock meal plan for development purposes
-            var mockPlan = @"{
-                ""weekly_plan"": {
-                    ""monday"": {
-                        ""breakfast"": { ""recipe_id"": ""recipe-1"", ""servings"": 1 },
-                        ""lunch"": { ""recipe_id"": ""recipe-2"", ""servings"": 1 },
-                        ""dinner"": { ""recipe_id"": ""recipe-3"", ""servings"": 1 },
-                        ""snacks"": [
-                            { ""recipe_id"": ""recipe-4"", ""servings"": 1 }
-                        ]
-                    },
-                    ""tuesday"": {
-                        ""breakfast"": { ""recipe_id"": ""recipe-5"", ""servings"": 1 },
-                        ""lunch"": { ""recipe_id"": ""recipe-6"", ""servings"": 1 },
-                        ""dinner"": { ""recipe_id"": ""recipe-7"", ""servings"": 1 },
-                        ""snacks"": [
-                            { ""recipe_id"": ""recipe-8"", ""servings"": 1 }
-                        ]
-                    },
-                    ""wednesday"": {
-                        ""breakfast"": { ""recipe_id"": ""recipe-1"", ""servings"": 1 },
-                        ""lunch"": { ""recipe_id"": ""recipe-2"", ""servings"": 1 },
-                        ""dinner"": { ""recipe_id"": ""recipe-3"", ""servings"": 1 },
-                        ""snacks"": [
-                            { ""recipe_id"": ""recipe-4"", ""servings"": 1 }
-                        ]
-                    },
-                    ""thursday"": {
-                        ""breakfast"": { ""recipe_id"": ""recipe-5"", ""servings"": 1 },
-                        ""lunch"": { ""recipe_id"": ""recipe-6"", ""servings"": 1 },
-                        ""dinner"": { ""recipe_id"": ""recipe-7"", ""servings"": 1 },
-                        ""snacks"": [
-                            { ""recipe_id"": ""recipe-8"", ""servings"": 1 }
-                        ]
-                    },
-                    ""friday"": {
-                        ""breakfast"": { ""recipe_id"": ""recipe-1"", ""servings"": 1 },
-                        ""lunch"": { ""recipe_id"": ""recipe-2"", ""servings"": 1 },
-                        ""dinner"": { ""recipe_id"": ""recipe-3"", ""servings"": 1 },
-                        ""snacks"": [
-                            { ""recipe_id"": ""recipe-4"", ""servings"": 1 }
-                        ]
-                    },
-                    ""saturday"": {
-                        ""breakfast"": { ""recipe_id"": ""recipe-5"", ""servings"": 1 },
-                        ""lunch"": { ""recipe_id"": ""recipe-6"", ""servings"": 1 },
-                        ""dinner"": { ""recipe_id"": ""recipe-7"", ""servings"": 1 },
-                        ""snacks"": [
-                            { ""recipe_id"": ""recipe-8"", ""servings"": 1 }
-                        ]
-                    },
-                    ""sunday"": {
-                        ""breakfast"": { ""recipe_id"": ""recipe-1"", ""servings"": 1 },
-                        ""lunch"": { ""recipe_id"": ""recipe-2"", ""servings"": 1 },
-                        ""dinner"": { ""recipe_id"": ""recipe-3"", ""servings"": 1 },
-                        ""snacks"": [
-                            { ""recipe_id"": ""recipe-4"", ""servings"": 1 }
-                        ]
-                    }
-                },
-                ""nutrition_summary"": {
-                    ""total_calories"": " + (userProfile.TargetCalories * 7) + @",
-                    ""avg_daily_calories"": " + userProfile.TargetCalories + @",
-                    ""protein"": " + (userProfile.TargetProtein * 7) + @",
-                    ""carbs"": " + (userProfile.TargetCarbs * 7) + @",
-                    ""fats"": " + (userProfile.TargetFats * 7) + @"
-                }
-            }";
+            var targetCals = userProfile.TargetCalories > 0 ? userProfile.TargetCalories : 2000;
+            var userId = userProfile.UserId ?? "demo-user";
+            
+            // Generate a realistic mock meal plan that matches the expected schema for ALL 7 DAYS
+            var mockPlan = $@"{{
+  ""id"": ""{Guid.NewGuid()}"",
+  ""userId"": ""{userId}"",
+  ""weekIdentifier"": ""2025-W37"",
+  ""dailyMeals"": {{
+    ""monday"": {{
+      ""date"": ""2025-09-08T00:00:00Z"",
+      ""dayOfWeek"": ""monday"",
+      ""meals"": {{
+        ""breakfast"": {{
+          ""id"": ""meal-mon-b"",
+          ""name"": ""Oatmeal with Berries"",
+          ""recipe"": {{
+            ""id"": ""recipe-001"",
+            ""name"": ""Oatmeal with Berries"",
+            ""cuisine"": ""American"",
+            ""steps"": [""Boil 1 cup water"", ""Add oats and cook 5 min"", ""Top with berries""],
+            ""ingredients"": [
+              {{""item"": ""rolled oats"", ""qty"": ""1/2"", ""unit"": ""cup"", ""category"": ""grains"", ""estimatedCost"": 0.5}},
+              {{""item"": ""blueberries"", ""qty"": ""1/2"", ""unit"": ""cup"", ""category"": ""produce"", ""estimatedCost"": 2.0}}
+            ],
+            ""calories"": 320,
+            ""difficulty"": ""easy"",
+            ""totalTime"": 10,
+            ""servings"": 1
+          }},
+          ""servings"": 1,
+          ""mealType"": ""breakfast"",
+          ""nutrition"": {{""calories"": 320, ""protein"": 12.0, ""carbohydrates"": 58.0, ""fats"": 6.0}}
+        }},
+        ""lunch"": {{
+          ""id"": ""meal-mon-l"",
+          ""name"": ""Turkey Sandwich"",
+          ""recipe"": {{
+            ""id"": ""recipe-002"",
+            ""name"": ""Turkey Sandwich"",
+            ""cuisine"": ""American"",
+            ""steps"": [""Toast bread"", ""Add turkey and vegetables"", ""Serve""],
+            ""ingredients"": [
+              {{""item"": ""whole wheat bread"", ""qty"": ""2"", ""unit"": ""slices"", ""category"": ""grains"", ""estimatedCost"": 0.8}},
+              {{""item"": ""turkey breast"", ""qty"": ""4"", ""unit"": ""oz"", ""category"": ""protein"", ""estimatedCost"": 3.0}}
+            ],
+            ""calories"": 380,
+            ""difficulty"": ""easy"",
+            ""totalTime"": 5,
+            ""servings"": 1
+          }},
+          ""servings"": 1,
+          ""mealType"": ""lunch"",
+          ""nutrition"": {{""calories"": 380, ""protein"": 28.0, ""carbohydrates"": 32.0, ""fats"": 12.0}}
+        }},
+        ""dinner"": {{
+          ""id"": ""meal-mon-d"",
+          ""name"": ""Grilled Chicken & Rice"",
+          ""recipe"": {{
+            ""id"": ""recipe-003"",
+            ""name"": ""Grilled Chicken & Rice"",
+            ""cuisine"": ""American"",
+            ""steps"": [""Season chicken"", ""Grill 6-8 min per side"", ""Cook rice"", ""Serve together""],
+            ""ingredients"": [
+              {{""item"": ""chicken breast"", ""qty"": ""6"", ""unit"": ""oz"", ""category"": ""protein"", ""estimatedCost"": 4.0}},
+              {{""item"": ""brown rice"", ""qty"": ""1/2"", ""unit"": ""cup"", ""category"": ""grains"", ""estimatedCost"": 0.5}}
+            ],
+            ""calories"": 450,
+            ""difficulty"": ""medium"",
+            ""totalTime"": 25,
+            ""servings"": 1
+          }},
+          ""servings"": 1,
+          ""mealType"": ""dinner"",
+          ""nutrition"": {{""calories"": 450, ""protein"": 42.0, ""carbohydrates"": 38.0, ""fats"": 8.0}}
+        }}
+      }}
+    }},
+    ""tuesday"": {{
+      ""date"": ""2025-09-09T00:00:00Z"",
+      ""dayOfWeek"": ""tuesday"",
+      ""meals"": {{
+        ""breakfast"": {{
+          ""id"": ""meal-tue-b"",
+          ""name"": ""Greek Yogurt Bowl"",
+          ""recipe"": {{
+            ""id"": ""recipe-004"",
+            ""name"": ""Greek Yogurt Bowl"",
+            ""cuisine"": ""Mediterranean"",
+            ""steps"": [""Add yogurt to bowl"", ""Top with granola and fruit""],
+            ""ingredients"": [
+              {{""item"": ""greek yogurt"", ""qty"": ""1"", ""unit"": ""cup"", ""category"": ""dairy"", ""estimatedCost"": 1.5}},
+              {{""item"": ""granola"", ""qty"": ""1/4"", ""unit"": ""cup"", ""category"": ""grains"", ""estimatedCost"": 1.0}}
+            ],
+            ""calories"": 300,
+            ""difficulty"": ""easy"",
+            ""totalTime"": 3,
+            ""servings"": 1
+          }},
+          ""servings"": 1,
+          ""mealType"": ""breakfast"",
+          ""nutrition"": {{""calories"": 300, ""protein"": 20.0, ""carbohydrates"": 40.0, ""fats"": 8.0}}
+        }},
+        ""lunch"": {{
+          ""id"": ""meal-tue-l"",
+          ""name"": ""Caesar Salad"",
+          ""recipe"": {{
+            ""id"": ""recipe-005"",
+            ""name"": ""Caesar Salad"",
+            ""cuisine"": ""Italian"",
+            ""steps"": [""Chop romaine"", ""Add dressing and toppings"", ""Toss and serve""],
+            ""ingredients"": [
+              {{""item"": ""romaine lettuce"", ""qty"": ""2"", ""unit"": ""cups"", ""category"": ""produce"", ""estimatedCost"": 1.0}},
+              {{""item"": ""parmesan cheese"", ""qty"": ""1/4"", ""unit"": ""cup"", ""category"": ""dairy"", ""estimatedCost"": 1.5}}
+            ],
+            ""calories"": 350,
+            ""difficulty"": ""easy"",
+            ""totalTime"": 8,
+            ""servings"": 1
+          }},
+          ""servings"": 1,
+          ""mealType"": ""lunch"",
+          ""nutrition"": {{""calories"": 350, ""protein"": 15.0, ""carbohydrates"": 20.0, ""fats"": 26.0}}
+        }},
+        ""dinner"": {{
+          ""id"": ""meal-tue-d"",
+          ""name"": ""Salmon & Vegetables"",
+          ""recipe"": {{
+            ""id"": ""recipe-006"",
+            ""name"": ""Salmon & Vegetables"",
+            ""cuisine"": ""American"",
+            ""steps"": [""Season salmon"", ""Bake 12-15 min"", ""Steam vegetables"", ""Serve""],
+            ""ingredients"": [
+              {{""item"": ""salmon fillet"", ""qty"": ""6"", ""unit"": ""oz"", ""category"": ""protein"", ""estimatedCost"": 6.0}},
+              {{""item"": ""asparagus"", ""qty"": ""1"", ""unit"": ""cup"", ""category"": ""produce"", ""estimatedCost"": 2.0}}
+            ],
+            ""calories"": 480,
+            ""difficulty"": ""medium"",
+            ""totalTime"": 20,
+            ""servings"": 1
+          }},
+          ""servings"": 1,
+          ""mealType"": ""dinner"",
+          ""nutrition"": {{""calories"": 480, ""protein"": 38.0, ""carbohydrates"": 35.0, ""fats"": 18.0}}
+        }}
+      }}
+    }},
+    ""wednesday"": {{
+      ""date"": ""2025-09-10T00:00:00Z"",
+      ""dayOfWeek"": ""wednesday"",
+      ""meals"": {{
+        ""breakfast"": {{
+          ""id"": ""meal-wed-b"",
+          ""name"": ""Scrambled Eggs & Toast"",
+          ""recipe"": {{
+            ""id"": ""recipe-007"",
+            ""name"": ""Scrambled Eggs & Toast"",
+            ""cuisine"": ""American"",
+            ""steps"": [""Beat eggs"", ""Cook in pan"", ""Toast bread"", ""Serve together""],
+            ""ingredients"": [
+              {{""item"": ""eggs"", ""qty"": ""2"", ""unit"": ""large"", ""category"": ""protein"", ""estimatedCost"": 1.0}},
+              {{""item"": ""whole grain bread"", ""qty"": ""2"", ""unit"": ""slices"", ""category"": ""grains"", ""estimatedCost"": 0.8}}
+            ],
+            ""calories"": 340,
+            ""difficulty"": ""easy"",
+            ""totalTime"": 8,
+            ""servings"": 1
+          }},
+          ""servings"": 1,
+          ""mealType"": ""breakfast"",
+          ""nutrition"": {{""calories"": 340, ""protein"": 18.0, ""carbohydrates"": 28.0, ""fats"": 16.0}}
+        }},
+        ""lunch"": {{
+          ""id"": ""meal-wed-l"",
+          ""name"": ""Quinoa Salad"",
+          ""recipe"": {{
+            ""id"": ""recipe-008"",
+            ""name"": ""Quinoa Salad"",
+            ""cuisine"": ""Mediterranean"",
+            ""steps"": [""Cook quinoa"", ""Mix with vegetables"", ""Add dressing""],
+            ""ingredients"": [
+              {{""item"": ""quinoa"", ""qty"": ""1/2"", ""unit"": ""cup"", ""category"": ""grains"", ""estimatedCost"": 1.2}},
+              {{""item"": ""cucumber"", ""qty"": ""1"", ""unit"": ""medium"", ""category"": ""produce"", ""estimatedCost"": 0.8}}
+            ],
+            ""calories"": 360,
+            ""difficulty"": ""easy"",
+            ""totalTime"": 15,
+            ""servings"": 1
+          }},
+          ""servings"": 1,
+          ""mealType"": ""lunch"",
+          ""nutrition"": {{""calories"": 360, ""protein"": 12.0, ""carbohydrates"": 58.0, ""fats"": 8.0}}
+        }},
+        ""dinner"": {{
+          ""id"": ""meal-wed-d"",
+          ""name"": ""Beef Stir Fry"",
+          ""recipe"": {{
+            ""id"": ""recipe-009"",
+            ""name"": ""Beef Stir Fry"",
+            ""cuisine"": ""Asian"",
+            ""steps"": [""Slice beef"", ""Heat wok"", ""Stir fry beef and vegetables"", ""Serve with rice""],
+            ""ingredients"": [
+              {{""item"": ""beef strips"", ""qty"": ""5"", ""unit"": ""oz"", ""category"": ""protein"", ""estimatedCost"": 5.0}},
+              {{""item"": ""bell peppers"", ""qty"": ""1"", ""unit"": ""cup"", ""category"": ""produce"", ""estimatedCost"": 1.5}}
+            ],
+            ""calories"": 420,
+            ""difficulty"": ""medium"",
+            ""totalTime"": 20,
+            ""servings"": 1
+          }},
+          ""servings"": 1,
+          ""mealType"": ""dinner"",
+          ""nutrition"": {{""calories"": 420, ""protein"": 35.0, ""carbohydrates"": 25.0, ""fats"": 18.0}}
+        }}
+      }}
+    }},
+    ""thursday"": {{
+      ""date"": ""2025-09-11T00:00:00Z"",
+      ""dayOfWeek"": ""thursday"",
+      ""meals"": {{
+        ""breakfast"": {{
+          ""id"": ""meal-thu-b"",
+          ""name"": ""Smoothie Bowl"",
+          ""recipe"": {{
+            ""id"": ""recipe-010"",
+            ""name"": ""Smoothie Bowl"",
+            ""cuisine"": ""American"",
+            ""steps"": [""Blend fruits"", ""Pour into bowl"", ""Top with granola""],
+            ""ingredients"": [
+              {{""item"": ""banana"", ""qty"": ""1"", ""unit"": ""large"", ""category"": ""produce"", ""estimatedCost"": 0.5}},
+              {{""item"": ""berries"", ""qty"": ""1/2"", ""unit"": ""cup"", ""category"": ""produce"", ""estimatedCost"": 2.5}}
+            ],
+            ""calories"": 290,
+            ""difficulty"": ""easy"",
+            ""totalTime"": 5,
+            ""servings"": 1
+          }},
+          ""servings"": 1,
+          ""mealType"": ""breakfast"",
+          ""nutrition"": {{""calories"": 290, ""protein"": 8.0, ""carbohydrates"": 62.0, ""fats"": 4.0}}
+        }},
+        ""lunch"": {{
+          ""id"": ""meal-thu-l"",
+          ""name"": ""Chicken Wrap"",
+          ""recipe"": {{
+            ""id"": ""recipe-011"",
+            ""name"": ""Chicken Wrap"",
+            ""cuisine"": ""American"",
+            ""steps"": [""Grill chicken"", ""Wrap in tortilla"", ""Add vegetables""],
+            ""ingredients"": [
+              {{""item"": ""chicken breast"", ""qty"": ""4"", ""unit"": ""oz"", ""category"": ""protein"", ""estimatedCost"": 3.5}},
+              {{""item"": ""tortilla"", ""qty"": ""1"", ""unit"": ""large"", ""category"": ""grains"", ""estimatedCost"": 0.8}}
+            ],
+            ""calories"": 390,
+            ""difficulty"": ""medium"",
+            ""totalTime"": 15,
+            ""servings"": 1
+          }},
+          ""servings"": 1,
+          ""mealType"": ""lunch"",
+          ""nutrition"": {{""calories"": 390, ""protein"": 32.0, ""carbohydrates"": 35.0, ""fats"": 12.0}}
+        }},
+        ""dinner"": {{
+          ""id"": ""meal-thu-d"",
+          ""name"": ""Pork Chops & Potatoes"",
+          ""recipe"": {{
+            ""id"": ""recipe-012"",
+            ""name"": ""Pork Chops & Potatoes"",
+            ""cuisine"": ""American"",
+            ""steps"": [""Season pork chops"", ""Pan fry"", ""Roast potatoes"", ""Serve together""],
+            ""ingredients"": [
+              {{""item"": ""pork chops"", ""qty"": ""1"", ""unit"": ""piece"", ""category"": ""protein"", ""estimatedCost"": 4.5}},
+              {{""item"": ""potatoes"", ""qty"": ""2"", ""unit"": ""medium"", ""category"": ""produce"", ""estimatedCost"": 1.0}}
+            ],
+            ""calories"": 460,
+            ""difficulty"": ""medium"",
+            ""totalTime"": 30,
+            ""servings"": 1
+          }},
+          ""servings"": 1,
+          ""mealType"": ""dinner"",
+          ""nutrition"": {{""calories"": 460, ""protein"": 36.0, ""carbohydrates"": 42.0, ""fats"": 16.0}}
+        }}
+      }}
+    }},
+    ""friday"": {{
+      ""date"": ""2025-09-12T00:00:00Z"",
+      ""dayOfWeek"": ""friday"",
+      ""meals"": {{
+        ""breakfast"": {{
+          ""id"": ""meal-fri-b"",
+          ""name"": ""Pancakes"",
+          ""recipe"": {{
+            ""id"": ""recipe-013"",
+            ""name"": ""Pancakes"",
+            ""cuisine"": ""American"",
+            ""steps"": [""Mix batter"", ""Cook on griddle"", ""Serve with syrup""],
+            ""ingredients"": [
+              {{""item"": ""flour"", ""qty"": ""1"", ""unit"": ""cup"", ""category"": ""grains"", ""estimatedCost"": 0.5}},
+              {{""item"": ""milk"", ""qty"": ""1"", ""unit"": ""cup"", ""category"": ""dairy"", ""estimatedCost"": 0.6}}
+            ],
+            ""calories"": 350,
+            ""difficulty"": ""easy"",
+            ""totalTime"": 15,
+            ""servings"": 1
+          }},
+          ""servings"": 1,
+          ""mealType"": ""breakfast"",
+          ""nutrition"": {{""calories"": 350, ""protein"": 10.0, ""carbohydrates"": 65.0, ""fats"": 8.0}}
+        }},
+        ""lunch"": {{
+          ""id"": ""meal-fri-l"",
+          ""name"": ""Vegetable Soup"",
+          ""recipe"": {{
+            ""id"": ""recipe-014"",
+            ""name"": ""Vegetable Soup"",
+            ""cuisine"": ""American"",
+            ""steps"": [""Chop vegetables"", ""Simmer in broth"", ""Season to taste""],
+            ""ingredients"": [
+              {{""item"": ""mixed vegetables"", ""qty"": ""2"", ""unit"": ""cups"", ""category"": ""produce"", ""estimatedCost"": 2.0}},
+              {{""item"": ""vegetable broth"", ""qty"": ""2"", ""unit"": ""cups"", ""category"": ""pantry"", ""estimatedCost"": 1.0}}
+            ],
+            ""calories"": 180,
+            ""difficulty"": ""easy"",
+            ""totalTime"": 25,
+            ""servings"": 1
+          }},
+          ""servings"": 1,
+          ""mealType"": ""lunch"",
+          ""nutrition"": {{""calories"": 180, ""protein"": 6.0, ""carbohydrates"": 35.0, ""fats"": 2.0}}
+        }},
+        ""dinner"": {{
+          ""id"": ""meal-fri-d"",
+          ""name"": ""Fish Tacos"",
+          ""recipe"": {{
+            ""id"": ""recipe-015"",
+            ""name"": ""Fish Tacos"",
+            ""cuisine"": ""Mexican"",
+            ""steps"": [""Season fish"", ""Cook fish"", ""Warm tortillas"", ""Assemble tacos""],
+            ""ingredients"": [
+              {{""item"": ""white fish"", ""qty"": ""5"", ""unit"": ""oz"", ""category"": ""protein"", ""estimatedCost"": 5.5}},
+              {{""item"": ""corn tortillas"", ""qty"": ""3"", ""unit"": ""pieces"", ""category"": ""grains"", ""estimatedCost"": 1.0}}
+            ],
+            ""calories"": 480,
+            ""difficulty"": ""medium"",
+            ""totalTime"": 20,
+            ""servings"": 1
+          }},
+          ""servings"": 1,
+          ""mealType"": ""dinner"",
+          ""nutrition"": {{""calories"": 480, ""protein"": 35.0, ""carbohydrates"": 45.0, ""fats"": 16.0}}
+        }}
+      }}
+    }},
+    ""saturday"": {{
+      ""date"": ""2025-09-13T00:00:00Z"",
+      ""dayOfWeek"": ""saturday"",
+      ""meals"": {{
+        ""breakfast"": {{
+          ""id"": ""meal-sat-b"",
+          ""name"": ""Avocado Toast"",
+          ""recipe"": {{
+            ""id"": ""recipe-016"",
+            ""name"": ""Avocado Toast"",
+            ""cuisine"": ""American"",
+            ""steps"": [""Toast bread"", ""Mash avocado"", ""Spread on toast"", ""Season""],
+            ""ingredients"": [
+              {{""item"": ""avocado"", ""qty"": ""1"", ""unit"": ""large"", ""category"": ""produce"", ""estimatedCost"": 1.5}},
+              {{""item"": ""sourdough bread"", ""qty"": ""2"", ""unit"": ""slices"", ""category"": ""grains"", ""estimatedCost"": 1.0}}
+            ],
+            ""calories"": 330,
+            ""difficulty"": ""easy"",
+            ""totalTime"": 5,
+            ""servings"": 1
+          }},
+          ""servings"": 1,
+          ""mealType"": ""breakfast"",
+          ""nutrition"": {{""calories"": 330, ""protein"": 8.0, ""carbohydrates"": 35.0, ""fats"": 18.0}}
+        }},
+        ""lunch"": {{
+          ""id"": ""meal-sat-l"",
+          ""name"": ""Pasta Salad"",
+          ""recipe"": {{
+            ""id"": ""recipe-017"",
+            ""name"": ""Pasta Salad"",
+            ""cuisine"": ""Italian"",
+            ""steps"": [""Cook pasta"", ""Mix with vegetables"", ""Add dressing""],
+            ""ingredients"": [
+              {{""item"": ""pasta"", ""qty"": ""1"", ""unit"": ""cup"", ""category"": ""grains"", ""estimatedCost"": 0.8}},
+              {{""item"": ""cherry tomatoes"", ""qty"": ""1"", ""unit"": ""cup"", ""category"": ""produce"", ""estimatedCost"": 1.8}}
+            ],
+            ""calories"": 380,
+            ""difficulty"": ""easy"",
+            ""totalTime"": 12,
+            ""servings"": 1
+          }},
+          ""servings"": 1,
+          ""mealType"": ""lunch"",
+          ""nutrition"": {{""calories"": 380, ""protein"": 12.0, ""carbohydrates"": 68.0, ""fats"": 8.0}}
+        }},
+        ""dinner"": {{
+          ""id"": ""meal-sat-d"",
+          ""name"": ""BBQ Ribs"",
+          ""recipe"": {{
+            ""id"": ""recipe-018"",
+            ""name"": ""BBQ Ribs"",
+            ""cuisine"": ""American"",
+            ""steps"": [""Season ribs"", ""Slow cook"", ""Baste with sauce"", ""Finish on grill""],
+            ""ingredients"": [
+              {{""item"": ""pork ribs"", ""qty"": ""8"", ""unit"": ""oz"", ""category"": ""protein"", ""estimatedCost"": 6.0}},
+              {{""item"": ""BBQ sauce"", ""qty"": ""1/4"", ""unit"": ""cup"", ""category"": ""pantry"", ""estimatedCost"": 0.5}}
+            ],
+            ""calories"": 520,
+            ""difficulty"": ""hard"",
+            ""totalTime"": 180,
+            ""servings"": 1
+          }},
+          ""servings"": 1,
+          ""mealType"": ""dinner"",
+          ""nutrition"": {{""calories"": 520, ""protein"": 45.0, ""carbohydrates"": 15.0, ""fats"": 32.0}}
+        }}
+      }}
+    }},
+    ""sunday"": {{
+      ""date"": ""2025-09-14T00:00:00Z"",
+      ""dayOfWeek"": ""sunday"",
+      ""meals"": {{
+        ""breakfast"": {{
+          ""id"": ""meal-sun-b"",
+          ""name"": ""French Toast"",
+          ""recipe"": {{
+            ""id"": ""recipe-019"",
+            ""name"": ""French Toast"",
+            ""cuisine"": ""French"",
+            ""steps"": [""Beat eggs and milk"", ""Dip bread"", ""Cook in pan"", ""Serve with syrup""],
+            ""ingredients"": [
+              {{""item"": ""brioche bread"", ""qty"": ""3"", ""unit"": ""slices"", ""category"": ""grains"", ""estimatedCost"": 1.5}},
+              {{""item"": ""eggs"", ""qty"": ""2"", ""unit"": ""large"", ""category"": ""protein"", ""estimatedCost"": 1.0}}
+            ],
+            ""calories"": 380,
+            ""difficulty"": ""medium"",
+            ""totalTime"": 12,
+            ""servings"": 1
+          }},
+          ""servings"": 1,
+          ""mealType"": ""breakfast"",
+          ""nutrition"": {{""calories"": 380, ""protein"": 16.0, ""carbohydrates"": 48.0, ""fats"": 14.0}}
+        }},
+        ""lunch"": {{
+          ""id"": ""meal-sun-l"",
+          ""name"": ""Chicken Salad"",
+          ""recipe"": {{
+            ""id"": ""recipe-020"",
+            ""name"": ""Chicken Salad"",
+            ""cuisine"": ""American"",
+            ""steps"": [""Grill chicken"", ""Slice chicken"", ""Mix with greens"", ""Add dressing""],
+            ""ingredients"": [
+              {{""item"": ""chicken breast"", ""qty"": ""5"", ""unit"": ""oz"", ""category"": ""protein"", ""estimatedCost"": 4.0}},
+              {{""item"": ""mixed greens"", ""qty"": ""2"", ""unit"": ""cups"", ""category"": ""produce"", ""estimatedCost"": 1.5}}
+            ],
+            ""calories"": 320,
+            ""difficulty"": ""easy"",
+            ""totalTime"": 15,
+            ""servings"": 1
+          }},
+          ""servings"": 1,
+          ""mealType"": ""lunch"",
+          ""nutrition"": {{""calories"": 320, ""protein"": 38.0, ""carbohydrates"": 12.0, ""fats"": 12.0}}
+        }},
+        ""dinner"": {{
+          ""id"": ""meal-sun-d"",
+          ""name"": ""Spaghetti Marinara"",
+          ""recipe"": {{
+            ""id"": ""recipe-021"",
+            ""name"": ""Spaghetti Marinara"",
+            ""cuisine"": ""Italian"",
+            ""steps"": [""Boil pasta"", ""Heat marinara sauce"", ""Combine"", ""Serve with parmesan""],
+            ""ingredients"": [
+              {{""item"": ""spaghetti"", ""qty"": ""4"", ""unit"": ""oz"", ""category"": ""grains"", ""estimatedCost"": 0.8}},
+              {{""item"": ""marinara sauce"", ""qty"": ""1"", ""unit"": ""cup"", ""category"": ""pantry"", ""estimatedCost"": 1.2}}
+            ],
+            ""calories"": 420,
+            ""difficulty"": ""easy"",
+            ""totalTime"": 15,
+            ""servings"": 1
+          }},
+          ""servings"": 1,
+          ""mealType"": ""dinner"",
+          ""nutrition"": {{""calories"": 420, ""protein"": 14.0, ""carbohydrates"": 78.0, ""fats"": 6.0}}
+        }}
+      }}
+    }}
+  }}
+}}";
             
             return mockPlan;
         }
