@@ -1,5 +1,3 @@
-<app-header></app-header>
-
 <div class="dashboard-container">
   <!-- Header -->
   <div class="dashboard-header">
@@ -64,39 +62,74 @@
       <!-- Meal Plan Overview -->
       <mat-card class="overview-card">
         <mat-card-header>
+          <div mat-card-avatar class="overview-avatar">
+            <mat-icon>restaurant_menu</mat-icon>
+          </div>
           <mat-card-title>Week Overview</mat-card-title>
           <mat-card-subtitle>
             {{ availableWeeks()[selectedWeekIndex()].displayText }}
+            <mat-chip [color]="getStatusColor(getMealPlanStatusForColor(mealPlan))" class="status-chip">
+              <mat-icon>{{ getMealPlanStatusIcon(mealPlan) }}</mat-icon>
+              {{ getMealPlanStatus(mealPlan) }}
+            </mat-chip>
           </mat-card-subtitle>
         </mat-card-header>
         <mat-card-content>
           <div class="overview-stats">
-            <div class="stat">
-              <mat-icon>attach_money</mat-icon>
-              <span class="value">{{ formatCurrency(mealPlan.totalEstimatedCost) }}</span>
-              <span class="label">Total Cost</span>
+            <div class="stat-card">
+              <div class="stat-icon">
+                <mat-icon>attach_money</mat-icon>
+              </div>
+              <div class="stat-content">
+                <span class="value">{{ formatCurrency(getTotalCost(mealPlan)) }}</span>
+                <span class="label">Total Cost</span>
+              </div>
             </div>
-            <div class="stat">
-              <mat-icon>local_fire_department</mat-icon>
-              <span class="value">{{ mealPlan.weeklyNutritionSummary.averageCaloriesPerDay | number:'1.0-0' }}</span>
-              <span class="label">Avg Calories/Day</span>
+            <div class="stat-card">
+              <div class="stat-icon">
+                <mat-icon>local_fire_department</mat-icon>
+              </div>
+              <div class="stat-content">
+                <span class="value">{{ getAverageCalories(mealPlan) | number:'1.0-0' }}</span>
+                <span class="label">Avg Calories/Day</span>
+              </div>
             </div>
-            <div class="stat">
-              <mat-icon>fitness_center</mat-icon>
-              <span class="value">{{ mealPlan.weeklyNutritionSummary.totalProtein | number:'1.0-0' }}g</span>
-              <span class="label">Total Protein</span>
+            <div class="stat-card">
+              <div class="stat-icon">
+                <mat-icon>fitness_center</mat-icon>
+              </div>
+              <div class="stat-content">
+                <span class="value">{{ getTotalProtein(mealPlan) | number:'1.0-0' }}g</span>
+                <span class="label">Weekly Protein</span>
+              </div>
             </div>
-            <div class="stat">
-              <mat-chip [color]="getStatusColor(mealPlan.status)">
-                {{ mealPlan.status }}
-              </mat-chip>
+            <div class="stat-card">
+              <div class="stat-icon">
+                <mat-icon>calendar_today</mat-icon>
+              </div>
+              <div class="stat-content">
+                <span class="value">{{ weekMealData().length }}</span>
+                <span class="label">Days Planned</span>
+              </div>
             </div>
           </div>
           
           <div class="overview-actions">
-            <button mat-button color="primary" (click)="generateMealPlan()">
+            <button mat-raised-button color="primary" (click)="regenerateMealPlan()" [disabled]="loading()">
               <mat-icon>refresh</mat-icon>
               Regenerate Plan
+            </button>
+            <button mat-stroked-button color="primary" (click)="generateMealPlan()" [disabled]="loading()">
+              <mat-icon>edit</mat-icon>
+              Customize
+            </button>
+            <button mat-stroked-button color="warn" (click)="clearAllData()">
+              <mat-icon>clear</mat-icon>
+              Clear Data
+            </button>
+            <button mat-stroked-button color="accent">
+              <mat-icon>share</mat-icon>
+              Share
             </button>
           </div>
         </mat-card-content>
@@ -105,89 +138,214 @@
       <!-- Daily Meals Grid -->
       <div class="daily-meals-grid">
         @for (dayData of weekMealData(); track dayData.dayName) {
-          <mat-card class="day-card">
-            <mat-card-header>
+          <mat-card class="day-card" [class.today]="isToday(dayData.date)">
+            <mat-card-header class="day-header">
+              <div mat-card-avatar class="day-avatar">
+                <mat-icon>{{ getDayIcon(dayData.dayName) }}</mat-icon>
+              </div>
               <mat-card-title>{{ dayData.dayName }}</mat-card-title>
               <mat-card-subtitle>
-                {{ dayData.date | date:'MMM d' }}
+                {{ dayData.date | date:'MMM d, y' }}
+                @if (isToday(dayData.date)) {
+                  <mat-chip color="accent" class="today-chip">Today</mat-chip>
+                }
               </mat-card-subtitle>
+              <div class="day-summary">
+                <span class="calories">{{ dayData.dailyNutrition.totalCalories | number:'1.0-0' }} cal</span>
+                <span class="cost">{{ formatCurrency(dayData.dailyEstimatedCost) }}</span>
+              </div>
             </mat-card-header>
             
-            <mat-card-content>
+            <mat-card-content class="day-content">
               <!-- Meals for the day -->
               <div class="meals-list">
                 
                 <!-- Breakfast -->
                 @if (dayData.breakfast) {
-                  <div class="meal-item">
+                  <div class="meal-item breakfast">
                     <div class="meal-header">
-                      <mat-icon>{{ getMealTypeIcon('breakfast') }}</mat-icon>
-                      <span class="meal-type">Breakfast</span>
-                      <span class="meal-time">{{ formatTime(dayData.breakfast.estimatedPrepTime + dayData.breakfast.estimatedCookTime) }}</span>
+                      <div class="meal-icon-wrapper">
+                        <mat-icon class="meal-icon">{{ getMealTypeIcon('breakfast') }}</mat-icon>
+                      </div>
+                      <div class="meal-info">
+                        <span class="meal-type">Breakfast</span>
+                        <div class="meal-meta">
+                          <span class="time">{{ formatTime((dayData.breakfast.estimatedPrepTime || 0) + (dayData.breakfast.estimatedCookTime || 0)) }}</span>
+                          @if (dayData.breakfast.recipe.difficulty) {
+                            <mat-chip class="difficulty-chip" 
+                                      [class]="'difficulty-' + dayData.breakfast.recipe.difficulty.toLowerCase()">
+                              {{ dayData.breakfast.recipe.difficulty }}
+                            </mat-chip>
+                          }
+                        </div>
+                      </div>
                     </div>
                     <div class="meal-details">
-                      <h4>{{ dayData.breakfast.name }}</h4>
-                      <p class="meal-nutrition">
-                        {{ dayData.breakfast.nutrition.calories }} cal • 
-                        {{ dayData.breakfast.nutrition.protein }}g protein
-                      </p>
+                      <h4 class="meal-name">{{ dayData.breakfast.name || 'Unnamed Breakfast' }}</h4>
+                      <div class="meal-nutrition">
+                        <span class="nutrition-item">
+                          <mat-icon class="nutrition-icon">local_fire_department</mat-icon>
+                          {{ dayData.breakfast.nutrition.calories }} cal
+                        </span>
+                        <span class="nutrition-item">
+                          <mat-icon class="nutrition-icon">fitness_center</mat-icon>
+                          {{ dayData.breakfast.nutrition.protein | number:'1.0-0' }}g protein
+                        </span>
+                        @if (dayData.breakfast.nutrition.carbs) {
+                          <span class="nutrition-item">
+                            <mat-icon class="nutrition-icon">grain</mat-icon>
+                            {{ dayData.breakfast.nutrition.carbs | number:'1.0-0' }}g carbs
+                          </span>
+                        }
+                      </div>
                       @if (dayData.breakfast.recipe.cuisine) {
                         <mat-chip class="cuisine-chip">{{ dayData.breakfast.recipe.cuisine }}</mat-chip>
                       }
                     </div>
+                    <div class="meal-actions">
+                      <button mat-icon-button matTooltip="View Recipe" (click)="viewRecipe(dayData.breakfast)">
+                        <mat-icon>visibility</mat-icon>
+                      </button>
+                      <button mat-icon-button matTooltip="Mark as Cooked">
+                        <mat-icon>done</mat-icon>
+                      </button>
+                    </div>
+                  </div>
+                  <mat-divider></mat-divider>
+                } @else {
+                  <div class="meal-placeholder breakfast">
+                    <mat-icon>{{ getMealTypeIcon('breakfast') }}</mat-icon>
+                    <span>No breakfast planned</span>
                   </div>
                   <mat-divider></mat-divider>
                 }
 
                 <!-- Lunch -->
                 @if (dayData.lunch) {
-                  <div class="meal-item">
+                  <div class="meal-item lunch">
                     <div class="meal-header">
-                      <mat-icon>{{ getMealTypeIcon('lunch') }}</mat-icon>
-                      <span class="meal-type">Lunch</span>
-                      <span class="meal-time">{{ formatTime(dayData.lunch.estimatedPrepTime + dayData.lunch.estimatedCookTime) }}</span>
+                      <div class="meal-icon-wrapper">
+                        <mat-icon class="meal-icon">{{ getMealTypeIcon('lunch') }}</mat-icon>
+                      </div>
+                      <div class="meal-info">
+                        <span class="meal-type">Lunch</span>
+                        <div class="meal-meta">
+                          <span class="time">{{ formatTime((dayData.lunch.estimatedPrepTime || 0) + (dayData.lunch.estimatedCookTime || 0)) }}</span>
+                          @if (dayData.lunch.recipe.difficulty) {
+                            <mat-chip class="difficulty-chip" 
+                                      [class]="'difficulty-' + dayData.lunch.recipe.difficulty.toLowerCase()">
+                              {{ dayData.lunch.recipe.difficulty }}
+                            </mat-chip>
+                          }
+                        </div>
+                      </div>
                     </div>
                     <div class="meal-details">
-                      <h4>{{ dayData.lunch.name }}</h4>
-                      <p class="meal-nutrition">
-                        {{ dayData.lunch.nutrition.calories }} cal • 
-                        {{ dayData.lunch.nutrition.protein }}g protein
-                      </p>
+                      <h4 class="meal-name">{{ dayData.lunch.name || 'Unnamed Lunch' }}</h4>
+                      <div class="meal-nutrition">
+                        <span class="nutrition-item">
+                          <mat-icon class="nutrition-icon">local_fire_department</mat-icon>
+                          {{ dayData.lunch.nutrition.calories }} cal
+                        </span>
+                        <span class="nutrition-item">
+                          <mat-icon class="nutrition-icon">fitness_center</mat-icon>
+                          {{ dayData.lunch.nutrition.protein | number:'1.0-0' }}g protein
+                        </span>
+                        @if (dayData.lunch.nutrition.carbs) {
+                          <span class="nutrition-item">
+                            <mat-icon class="nutrition-icon">grain</mat-icon>
+                            {{ dayData.lunch.nutrition.carbs | number:'1.0-0' }}g carbs
+                          </span>
+                        }
+                      </div>
                       @if (dayData.lunch.recipe.cuisine) {
                         <mat-chip class="cuisine-chip">{{ dayData.lunch.recipe.cuisine }}</mat-chip>
                       }
                     </div>
+                    <div class="meal-actions">
+                      <button mat-icon-button matTooltip="View Recipe" (click)="viewRecipe(dayData.lunch)">
+                        <mat-icon>visibility</mat-icon>
+                      </button>
+                      <button mat-icon-button matTooltip="Mark as Cooked">
+                        <mat-icon>done</mat-icon>
+                      </button>
+                    </div>
+                  </div>
+                  <mat-divider></mat-divider>
+                } @else {
+                  <div class="meal-placeholder lunch">
+                    <mat-icon>{{ getMealTypeIcon('lunch') }}</mat-icon>
+                    <span>No lunch planned</span>
                   </div>
                   <mat-divider></mat-divider>
                 }
 
                 <!-- Dinner -->
                 @if (dayData.dinner) {
-                  <div class="meal-item">
+                  <div class="meal-item dinner">
                     <div class="meal-header">
-                      <mat-icon>{{ getMealTypeIcon('dinner') }}</mat-icon>
-                      <span class="meal-type">Dinner</span>
-                      <span class="meal-time">{{ formatTime(dayData.dinner.estimatedPrepTime + dayData.dinner.estimatedCookTime) }}</span>
+                      <div class="meal-icon-wrapper">
+                        <mat-icon class="meal-icon">{{ getMealTypeIcon('dinner') }}</mat-icon>
+                      </div>
+                      <div class="meal-info">
+                        <span class="meal-type">Dinner</span>
+                        <div class="meal-meta">
+                          <span class="time">{{ formatTime((dayData.dinner.estimatedPrepTime || 0) + (dayData.dinner.estimatedCookTime || 0)) }}</span>
+                          @if (dayData.dinner.recipe.difficulty) {
+                            <mat-chip class="difficulty-chip" 
+                                      [class]="'difficulty-' + dayData.dinner.recipe.difficulty.toLowerCase()">
+                              {{ dayData.dinner.recipe.difficulty }}
+                            </mat-chip>
+                          }
+                        </div>
+                      </div>
                     </div>
                     <div class="meal-details">
-                      <h4>{{ dayData.dinner.name }}</h4>
-                      <p class="meal-nutrition">
-                        {{ dayData.dinner.nutrition.calories }} cal • 
-                        {{ dayData.dinner.nutrition.protein }}g protein
-                      </p>
+                      <h4 class="meal-name">{{ dayData.dinner.name || 'Unnamed Dinner' }}</h4>
+                      <div class="meal-nutrition">
+                        <span class="nutrition-item">
+                          <mat-icon class="nutrition-icon">local_fire_department</mat-icon>
+                          {{ dayData.dinner.nutrition.calories }} cal
+                        </span>
+                        <span class="nutrition-item">
+                          <mat-icon class="nutrition-icon">fitness_center</mat-icon>
+                          {{ dayData.dinner.nutrition.protein | number:'1.0-0' }}g protein
+                        </span>
+                        @if (dayData.dinner.nutrition.carbs) {
+                          <span class="nutrition-item">
+                            <mat-icon class="nutrition-icon">grain</mat-icon>
+                            {{ dayData.dinner.nutrition.carbs | number:'1.0-0' }}g carbs
+                          </span>
+                        }
+                      </div>
                       @if (dayData.dinner.recipe.cuisine) {
                         <mat-chip class="cuisine-chip">{{ dayData.dinner.recipe.cuisine }}</mat-chip>
                       }
                     </div>
+                    <div class="meal-actions">
+                      <button mat-icon-button matTooltip="View Recipe" (click)="viewRecipe(dayData.dinner)">
+                        <mat-icon>visibility</mat-icon>
+                      </button>
+                      <button mat-icon-button matTooltip="Mark as Cooked">
+                        <mat-icon>done</mat-icon>
+                      </button>
+                    </div>
                   </div>
-                  <mat-divider></mat-divider>
+                } @else {
+                  <div class="meal-placeholder dinner">
+                    <mat-icon>{{ getMealTypeIcon('dinner') }}</mat-icon>
+                    <span>No dinner planned</span>
+                  </div>
                 }
 
                 <!-- Snacks -->
                 @if (dayData.snacks && dayData.snacks.length > 0) {
-                  <div class="meal-item">
+                  <mat-divider></mat-divider>
+                  <div class="meal-item snacks">
                     <div class="meal-header">
-                      <mat-icon>{{ getMealTypeIcon('snack') }}</mat-icon>
+                      <div class="meal-icon-wrapper">
+                        <mat-icon class="meal-icon">{{ getMealTypeIcon('snack') }}</mat-icon>
+                      </div>
                       <span class="meal-type">Snacks</span>
                     </div>
                     <div class="snacks-list">
@@ -195,33 +353,40 @@
                         <div class="snack-item">
                           <span class="snack-name">{{ snack.name }}</span>
                           <span class="snack-nutrition">{{ snack.nutrition.calories }} cal</span>
+                          <button mat-icon-button matTooltip="View Details" (click)="viewRecipe(snack)">
+                            <mat-icon>visibility</mat-icon>
+                          </button>
                         </div>
                       }
                     </div>
                   </div>
                 }
-
-                <!-- No meals planned -->
-                @if (!dayData.breakfast && !dayData.lunch && !dayData.dinner && (!dayData.snacks || dayData.snacks.length === 0)) {
-                  <div class="no-meals">
-                    <mat-icon>restaurant</mat-icon>
-                    <p>No meals planned</p>
-                  </div>
-                }
               </div>
               
-              <!-- Daily Summary -->
-              <div class="daily-summary">
-                <div class="summary-item">
-                  <span class="summary-label">Total Calories:</span>
-                  <span class="summary-value">{{ dayData.dailyNutrition.totalCalories | number:'1.0-0' }}</span>
+              <!-- Daily Progress Bar -->
+              <div class="daily-progress">
+                <div class="progress-header">
+                  <span class="progress-label">Daily Nutrition</span>
+                  <span class="progress-value">{{ dayData.dailyNutrition.totalCalories | number:'1.0-0' }} / {{ mealPlan.weeklyNutritionSummary.averageCaloriesPerDay | number:'1.0-0' }} cal</span>
                 </div>
-                <div class="summary-item">
-                  <span class="summary-label">Cost:</span>
-                  <span class="summary-value">{{ formatCurrency(dayData.dailyEstimatedCost) }}</span>
-                </div>
+                <mat-progress-bar 
+                  mode="determinate" 
+                  [value]="(dayData.dailyNutrition.totalCalories / mealPlan.weeklyNutritionSummary.averageCaloriesPerDay) * 100"
+                  class="nutrition-progress">
+                </mat-progress-bar>
               </div>
             </mat-card-content>
+            
+            <mat-card-actions class="day-actions">
+              <button mat-button color="primary">
+                <mat-icon>edit</mat-icon>
+                Modify Day
+              </button>
+              <button mat-button>
+                <mat-icon>add</mat-icon>
+                Add Snack
+              </button>
+            </mat-card-actions>
           </mat-card>
         }
       </div>
@@ -267,5 +432,7 @@
         </mat-card>
       }
     </div>
+
+    <!-- End of meal-plan-content -->
   }
 </div>
