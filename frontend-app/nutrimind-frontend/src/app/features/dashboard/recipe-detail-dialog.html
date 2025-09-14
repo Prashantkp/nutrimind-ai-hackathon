@@ -1,0 +1,158 @@
+<!-- Recipe Detail Dialog -->
+<div class="recipe-dialog">
+  <div class="recipe-header">
+    <div class="recipe-title-section">
+      <h2 class="recipe-title">{{ data.name }}</h2>
+      <div class="recipe-meta">
+        @if (data.recipe.cuisine) {
+          <mat-chip class="cuisine-chip">{{ data.recipe.cuisine }}</mat-chip>
+        }
+        @if (data.recipe.difficulty) {
+          <mat-chip class="difficulty-chip" 
+                    [class]="'difficulty-' + data.recipe.difficulty.toLowerCase()">
+            {{ data.recipe.difficulty }}
+          </mat-chip>
+        }
+      </div>
+    </div>
+    
+    <div class="recipe-time-info">
+      @if (data.recipe.prepTime) {
+        <div class="time-item">
+          <mat-icon>schedule</mat-icon>
+          <span class="time-label">Prep:</span>
+          <span class="time-value">{{ formatTime(data.recipe.prepTime) }}</span>
+        </div>
+      }
+      @if (data.recipe.cookTime) {
+        <div class="time-item">
+          <mat-icon>local_fire_department</mat-icon>
+          <span class="time-label">Cook:</span>
+          <span class="time-value">{{ formatTime(data.recipe.cookTime) }}</span>
+        </div>
+      }
+      @if (data.recipe.totalTime) {
+        <div class="time-item total-time">
+          <mat-icon>timer</mat-icon>
+          <span class="time-label">Total:</span>
+          <span class="time-value">{{ formatTime(data.recipe.totalTime) }}</span>
+        </div>
+      }
+    </div>
+  </div>
+
+  <!-- Nutrition Overview -->
+  <div class="nutrition-overview">
+    <div class="nutrition-card">
+      <div class="nutrition-item">
+        <mat-icon class="nutrition-icon calories">local_fire_department</mat-icon>
+        <div class="nutrition-content">
+          <span class="nutrition-value">{{ data.nutrition.calories }}</span>
+          <span class="nutrition-label">Calories</span>
+        </div>
+      </div>
+      
+      <div class="nutrition-item">
+        <mat-icon class="nutrition-icon protein">fitness_center</mat-icon>
+        <div class="nutrition-content">
+          <span class="nutrition-value">{{ data.nutrition.protein | number:'1.0-0' }}g</span>
+          <span class="nutrition-label">Protein</span>
+        </div>
+      </div>
+      
+      @if (data.nutrition.carbs) {
+        <div class="nutrition-item">
+          <mat-icon class="nutrition-icon carbs">grain</mat-icon>
+          <div class="nutrition-content">
+            <span class="nutrition-value">{{ data.nutrition.carbs | number:'1.0-0' }}g</span>
+            <span class="nutrition-label">Carbs</span>
+          </div>
+        </div>
+      }
+      
+      @if (data.nutrition.fat) {
+        <div class="nutrition-item">
+          <mat-icon class="nutrition-icon fat">opacity</mat-icon>
+          <div class="nutrition-content">
+            <span class="nutrition-value">{{ data.nutrition.fat | number:'1.0-0' }}g</span>
+            <span class="nutrition-label">Fat</span>
+          </div>
+        </div>
+      }
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="recipe-content">
+    <div class="content-section">
+      <div class="ingredients-section">
+        <h3>
+          <mat-icon>shopping_basket</mat-icon>
+          Ingredients
+        </h3>
+        
+        @if (data.recipe.ingredients && data.recipe.ingredients.length > 0) {
+          <div class="ingredients-list">
+            @for (ingredient of data.recipe.ingredients; track ingredient.name) {
+              <div class="ingredient-item">
+                <mat-checkbox class="ingredient-checkbox">
+                  <div class="ingredient-content">
+                    <span class="ingredient-qty">{{ ingredient.qty }}</span>
+                    <span class="ingredient-name">{{ ingredient.name }}</span>
+                  </div>
+                </mat-checkbox>
+                @if (ingredient.notes) {
+                  <span class="ingredient-notes">{{ ingredient.notes }}</span>
+                }
+              </div>
+            }
+          </div>
+        } @else {
+          <div class="no-data">
+            <mat-icon>info</mat-icon>
+            <span>Ingredients not available for this recipe.</span>
+          </div>
+        }
+      </div>
+
+      <div class="instructions-section">
+        <h3>
+          <mat-icon>list</mat-icon>
+          Instructions
+        </h3>
+        
+        @if (data.recipe.instructions && data.recipe.instructions.length > 0) {
+          <div class="instructions-list">
+            @for (step of data.recipe.instructions; track $index) {
+              <div class="instruction-step">
+                <div class="step-number">{{ $index + 1 }}</div>
+                <div class="step-content">{{ step }}</div>
+              </div>
+            }
+          </div>
+        } @else {
+          <div class="no-data">
+            <mat-icon>info</mat-icon>
+            <span>Instructions not available for this recipe.</span>
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+
+  <!-- Dialog Actions -->
+  <div class="dialog-actions">
+    <button mat-button (click)="closeDialog()">
+      <mat-icon>close</mat-icon>
+      Close
+    </button>
+    <button mat-raised-button color="primary">
+      <mat-icon>print</mat-icon>
+      Print Recipe
+    </button>
+    <button mat-raised-button color="accent">
+      <mat-icon>favorite_border</mat-icon>
+      Save Favorite
+    </button>
+  </div>
+</div>

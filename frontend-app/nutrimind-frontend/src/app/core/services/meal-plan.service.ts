@@ -22,11 +22,33 @@ export class MealPlanService {
    * Get meal plans for a specific week
    */
   getMealPlansForWeek(weekIdentifier: string): Observable<MealPlan[]> {
+    console.log('🔍 Loading meal plans for week:', weekIdentifier);
     const headers = this.getAuthHeaders();
     return this.http.get<any>(`${this.apiUrl}/mealplans?week=${weekIdentifier}`, { headers })
       .pipe(
-        map(response => response.data || []),
-        catchError(this.handleError)
+        map(response => {
+          console.log('📈 Raw getMealPlansForWeek response:', response);
+          
+          // Handle the API response structure: {Success: true, Data: [...], Message: "..."}
+          let mappedResponse: MealPlan[] = [];
+          
+          if (response && response.Success && response.Data) {
+            mappedResponse = Array.isArray(response.Data) ? response.Data : [response.Data];
+          } else if (Array.isArray(response)) {
+            // Direct array response
+            mappedResponse = response;
+          } else if (response && typeof response === 'object' && !Array.isArray(response)) {
+            // Single meal plan object
+            mappedResponse = [response];
+          }
+          
+          console.log('📊 Mapped meal plans:', mappedResponse);
+          return mappedResponse;
+        }),
+        catchError(error => {
+          console.error('❌ Error in getMealPlansForWeek API call:', error);
+          return this.handleError(error);
+        })
       );
   }
 
@@ -46,11 +68,49 @@ export class MealPlanService {
    * Generate a new meal plan for a week
    */
   generateMealPlan(request: GenerateMealPlanRequest): Observable<MealPlanGenerationResponse> {
+    console.log('🚀 generateMealPlan request:', request);
     const headers = this.getAuthHeaders();
     return this.http.post<any>(`${this.apiUrl}/mealplans`, request, { headers })
       .pipe(
-        map(response => response.data),
-        catchError(this.handleError)
+        map(response => {
+          console.log('🔍 Raw API response from generateMealPlan:', response);
+          
+          // Handle different response structures
+          let mappedResponse: MealPlanGenerationResponse;
+          
+          if (response && response.Success && response.Data) {
+            // API wrapper format: {Success: true, Data: {orchestrationId: "..."}, Message: "..."}
+            mappedResponse = response.Data;
+          } else if (response && response.data) {
+            mappedResponse = response.data;
+          } else if (response && response.orchestrationId) {
+            // Response is already in the correct format
+            mappedResponse = response;
+          } else if (response) {
+            // Try to extract orchestrationId from any level
+            mappedResponse = {
+              orchestrationId: response.orchestrationId || response.Data?.orchestrationId || null,
+              status: 'Started' as const
+            };
+          } else {
+            console.error('❌ Unexpected response structure:', response);
+            throw new Error('Invalid response structure from API');
+          }
+          
+          console.log('📊 Mapped response:', mappedResponse);
+          
+          // Validate required fields
+          if (!mappedResponse.orchestrationId) {
+            console.error('❌ Missing orchestrationId in response:', mappedResponse);
+            throw new Error('Missing orchestrationId in API response');
+          }
+          
+          return mappedResponse;
+        }),
+        catchError(error => {
+          console.error('❌ Error in generateMealPlan API call:', error);
+          return this.handleError(error);
+        })
       );
   }
 
@@ -58,11 +118,20 @@ export class MealPlanService {
    * Check the status of meal plan generation
    */
   getMealPlanStatus(orchestrationId: string): Observable<any> {
+    console.log('🔍 Checking meal plan status for orchestrationId:', orchestrationId);
     const headers = this.getAuthHeaders();
     return this.http.get<any>(`${this.apiUrl}/mealplans/status/${orchestrationId}`, { headers })
       .pipe(
-        map(response => response.data),
-        catchError(this.handleError)
+        map(response => {
+          console.log('📈 Raw status response:', response);
+          const mappedResponse = response.data || response;
+          console.log('📊 Mapped status response:', mappedResponse);
+          return mappedResponse;
+        }),
+        catchError(error => {
+          console.error('❌ Error in getMealPlanStatus API call:', error);
+          return this.handleError(error);
+        })
       );
   }
 
@@ -167,10 +236,27 @@ export class MealPlanService {
    * Handle HTTP errors
    */
   private handleError = (error: any): Observable<never> => {
-    console.error('MealPlanService error:', error);
+    console.error('❌ MealPlanService error details:', {
+      status: error.status,
+      statusText: error.statusText,
+      message: error.message,
+      error: error.error,
+      url: error.url
+    });
+    
     let errorMessage = 'An error occurred while processing your request.';
     
-    if (error.error?.message) {
+    if (error.status === 0) {
+      errorMessage = 'Network error: Unable to connect to the API server. Please check if the server is running.';
+    } else if (error.status === 401) {
+      errorMessage = 'Authentication error: Please log in again.';
+    } else if (error.status === 403) {
+      errorMessage = 'Access denied: You do not have permission to perform this action.';
+    } else if (error.status === 404) {
+      errorMessage = 'Resource not found: The requested endpoint does not exist.';
+    } else if (error.status >= 500) {
+      errorMessage = 'Server error: Please try again later.';
+    } else if (error.error?.message) {
       errorMessage = error.error.message;
     } else if (error.message) {
       errorMessage = error.message;
