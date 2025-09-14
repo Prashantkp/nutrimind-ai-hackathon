@@ -13,7 +13,7 @@ namespace NutriMind.Api.Services
     public interface ISearchService
     {
         Task<List<Recipe>> SearchRecipesAsync(string query, Dictionary<string, object>? filters = null, int maxResults = 20);
-        Task<List<Recipe>> GetRecipeRecommendationsAsync(string dietaryPreference, List<string> allergens, List<string> dislikes, int maxResults = 50);
+        Task<List<Recipe>> GetRecipeRecommendationsAsync(string dietaryPreference, List<string> allergens, List<string> dislikes, int maxResults = 50, int maxCaloriesPerMeal = 500);
         Task<Recipe?> GetRecipeByIdAsync(string recipeId);
     }
 
@@ -29,7 +29,7 @@ namespace NutriMind.Api.Services
 			var kvClient = new SecretClient(new Uri(keyVaultUri), new DefaultAzureCredential());
 			var endpoint = configuration["SearchEndpoint"];
             var apiKey = kvClient.GetSecret("ai-search-key").Value.Value;
-            var indexName = configuration["AzureSearchIndex"] ?? "azureblob-index";
+            var indexName = configuration["AzureSearchIndex"] ?? "reciepe-index-new";
 
             if (string.IsNullOrEmpty(endpoint) || string.IsNullOrEmpty(apiKey))
             {
@@ -113,36 +113,69 @@ namespace NutriMind.Api.Services
             }
         }
 
-        public async Task<List<Recipe>> GetRecipeRecommendationsAsync(string dietaryPreference, List<string> allergens, List<string> dislikes, int maxResults = 50)
+        public async Task<List<Recipe>> GetRecipeRecommendationsAsync(string dietaryPreference, List<string> allergens, List<string> dislikes, int maxResults = 50, int maxCaloriesPerMeal = 500)
         {
-            var filters = new Dictionary<string, object>();
+			var filters = new Dictionary<string, object>();
+			var filterExpressions = new List<string>();
 
-            // Add dietary preference filters
-            switch (dietaryPreference.ToLower())
-            {
-                case "vegan":
-                    filters["isvegan"] = true;
-                    break;
-                case "keto":
-                    filters["isketo"] = true;
-                    break;
-                case "diabetic-friendly":
-                    filters["isdiabeticfriendly"] = true;
-                    break;
-            }
+			// Add dietary preference filters - FIX: Use correct property names
+			switch (dietaryPreference.ToLower())
+			{
+				case "vegan":
+				case "vegetarian":
+					filterExpressions.Add("isVegan eq true");  // Changed from is_vegan
+					break;
+				case "keto":
+					filterExpressions.Add("isKeto eq true");   // Changed from is_keto
+					break;
+				case "diabetic-friendly":
+					filterExpressions.Add("isDiabeticFriendly eq true");  // Changed from is_diabetic_friendly
+					break;
+			}
 
-            // For allergens and dislikes, we'd need more complex filtering
-            // This is simplified for the demo
-            var searchQuery = "*"; // Search all recipes initially
+			filterExpressions.Add($"calories ge {maxCaloriesPerMeal - 100} and calories le {maxCaloriesPerMeal + 100}");
 
-            if (dislikes.Any())
-            {
-                // This would need more sophisticated implementation
-                searchQuery = $"-({string.Join(" OR ", dislikes.Select(d => $"\"{d}\""))})";
-            }
+			// For allergens and dislikes, we'd need more complex filtering
+			var searchQuery = "*"; // Search all recipes initially
 
-            return await SearchRecipesAsync(searchQuery, filters, maxResults);
-        }
+			//if (allergens != null)
+			//{
+			//	foreach (var allergen in allergens)
+			//	{
+			//		var escapedAllergen = allergen.Replace("'", "''");
+			//		filterExpressions.Add($"not ingredients/any(ingredient: ingredient/item eq '{escapedAllergen}')");
+			//	}
+			//}
+
+			//if (dislikes != null)
+			//{
+			//	foreach (var dislike in dislikes)
+			//	{
+			//		var escapedDislike = dislike.Replace("'", "''");
+			//		filterExpressions.Add($"not ingredients/any(ingredient: ingredient/item eq '{escapedDislike}')");
+			//	}
+			//}
+
+			var searchOptions = new SearchOptions
+			{
+				Size = maxResults,
+				IncludeTotalCount = true
+			};
+
+			if (filterExpressions.Any())
+				searchOptions.Filter = string.Join(" and ", filterExpressions);
+
+			var response = await _searchClient.SearchAsync<SearchDocument>("*", searchOptions);
+			var recipes = new List<SearchDocument>();
+
+			await foreach (var result in response.Value.GetResultsAsync())
+			{
+				recipes.Add(result.Document);
+			}
+
+            return new List<Recipe>();
+			//return recipes;
+		}
 
         public async Task<Recipe?> GetRecipeByIdAsync(string recipeId)
         {
@@ -184,9 +217,9 @@ namespace NutriMind.Api.Services
                     Tags = new List<string> { "healthy", "quinoa", "vegetables", "plant-based" },
                     Ingredients = new List<Ingredient>
                     {
-                        new() { Item = "quinoa", Qty = "1", Unit = "cup", Category = "grains", EstimatedCost = 3.50m },
-                        new() { Item = "kale", Qty = "2", Unit = "cups", Category = "produce", EstimatedCost = 2.00m },
-                        new() { Item = "chickpeas", Qty = "1", Unit = "can", Category = "pantry", EstimatedCost = 1.50m }
+                        new() { Item = "quinoa", Qty = "1", Unit = "cup", Category = "grains", EstimatedCost = 3 },
+                        new() { Item = "kale", Qty = "2", Unit = "cups", Category = "produce", EstimatedCost = 2 },
+                        new() { Item = "chickpeas", Qty = "1", Unit = "can", Category = "pantry", EstimatedCost = 1 }
                     },
                     Steps = new List<string>
                     {
@@ -210,9 +243,9 @@ namespace NutriMind.Api.Services
                     Tags = new List<string> { "keto", "low-carb", "salmon", "omega-3" },
                     Ingredients = new List<Ingredient>
                     {
-                        new() { Item = "salmon fillet", Qty = "6", Unit = "oz", Category = "protein", EstimatedCost = 8.00m },
-                        new() { Item = "asparagus", Qty = "1", Unit = "bunch", Category = "produce", EstimatedCost = 3.00m },
-                        new() { Item = "olive oil", Qty = "2", Unit = "tbsp", Category = "pantry", EstimatedCost = 0.50m }
+                        new() { Item = "salmon fillet", Qty = "6", Unit = "oz", Category = "protein", EstimatedCost = 8 },
+                        new() { Item = "asparagus", Qty = "1", Unit = "bunch", Category = "produce", EstimatedCost = 3 },
+                        new() { Item = "olive oil", Qty = "2", Unit = "tbsp", Category = "pantry", EstimatedCost = 0 }
                     },
                     Steps = new List<string>
                     {

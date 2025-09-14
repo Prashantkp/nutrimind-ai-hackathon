@@ -37,32 +37,33 @@ namespace NutriMind.Api.Orchestrations
                 }
 
                 // Step 2: Retrieve candidate recipes
-                logger.LogInformation("Step 2: Retrieving candidate recipes");
-                var recipeInput = new RetrieveRecipesInput
-                {
-                    DietaryPreference = input.Preferences?.DietaryPreference ?? userProfile.DietaryPreference,
-                    Allergens = input.Preferences?.Allergens ?? userProfile.Allergens,
-                    Dislikes = input.Preferences?.Dislikes ?? userProfile.Dislikes,
-                    PreferredCuisines = userProfile.PreferredCuisines,
-                    MaxRecipes = 100,
-                    MaxCookingTime = input.Preferences?.MaxPrepTime ?? userProfile.CookingTimePreference,
-                    MaxCaloriesPerMeal = (input.Preferences?.TargetCalories ?? userProfile.TargetCalories) / 3 // Rough estimate per meal
-                };
+                //logger.LogInformation("Step 2: Retrieving candidate recipes");
+                //var recipeInput = new RetrieveRecipesInput
+                //{
+                //    DietaryPreference = input.Preferences?.DietaryPreference ?? userProfile.DietaryPreference,
+                //    Allergens = input.Preferences?.Allergens ?? userProfile.Allergens,
+                //    Dislikes = input.Preferences?.Dislikes ?? userProfile.Dislikes,
+                //    PreferredCuisines = userProfile.PreferredCuisines,
+                //    MaxRecipes = 100,
+                //    MaxCookingTime = input.Preferences?.MaxPrepTime ?? userProfile.CookingTimePreference,
+                //    MaxCaloriesPerMeal = (input.Preferences?.TargetCalories ?? userProfile.TargetCalories) / 3 // Rough estimate per meal
+                //};
 
-                var candidateRecipes = await context.CallActivityAsync<List<Recipe>>("RetrieveCandidateRecipes", recipeInput);
+                //var candidateRecipes = await context.CallActivityAsync<List<Recipe>>("RetrieveCandidateRecipes", recipeInput);
 
-                if (!candidateRecipes.Any())
-                {
-                    throw new InvalidOperationException("No suitable recipes found for user preferences");
-                }
+                //if (!candidateRecipes.Any())
+                //{
+                //    throw new InvalidOperationException("No suitable recipes found for user preferences");
+                //}
 
                 // Step 3: Compose meal plan with LLM
                 logger.LogInformation("Step 3: Composing meal plan with AI");
                 var composePlanInput = new ComposePlanInput
                 {
                     UserProfile = userProfile,
-                    CandidateRecipes = candidateRecipes,
-                    WeekIdentifier = input.WeekIdentifier
+                    CandidateRecipes =  new List<Recipe>(),//candidateRecipes,
+
+					WeekIdentifier = input.WeekIdentifier
                 };
 
                 var mealPlan = await context.CallActivityAsync<MealPlan>("ComposePlanWithLLM", composePlanInput);

@@ -39,7 +39,7 @@ namespace NutriMind.Api.Activities
                 );
 
                 // Set additional metadata
-                mealPlan.GenerationMetadata.AiModel = "gpt-4";
+                mealPlan.GenerationMetadata.AiModel = "gpt-5-mini";
                 mealPlan.GenerationMetadata.RecipesConsidered = input.CandidateRecipes.Count;
                 mealPlan.GenerationMetadata.StartedAt = DateTime.UtcNow;
 

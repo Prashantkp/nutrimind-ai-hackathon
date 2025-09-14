@@ -160,7 +160,7 @@ namespace NutriMind.Api.Services
             prompt.AppendLine("Please create a meal plan with the following requirements:");
             prompt.AppendLine();
             prompt.AppendLine("USER PREFERENCES:");
-            prompt.AppendLine($"- Target calories per day: {userInput.TargetCalories}");
+			prompt.AppendLine($"- Target calories per day: {(userInput.TargetCalories == 0 ? 500 : userInput.TargetCalories)}");
             prompt.AppendLine($"- Dietary preference: {userInput.DietaryPreference}");
             prompt.AppendLine($"- Number of meals per day: {3}");
             prompt.AppendLine($"- Number of days to plan: {7}");
@@ -176,44 +176,92 @@ namespace NutriMind.Api.Services
             }
 
             prompt.AppendLine();
-            prompt.AppendLine("AVAILABLE RECIPES:");
 
-			//Group recipes by meal type for better organization
 
-			// var recipesByMealType = recipes.GroupBy(r => r.MealType).ToList();
-			var recipesByMealType = recipes.ToList();
-			foreach (var recipe in recipesByMealType)
-			{
-				prompt.AppendLine($"\n RECIPES:");
 
-				//foreach (var recipe in mealGroup.Take(15)) // Limit to prevent token overflow
-				//{
-				prompt.AppendLine($"\nRecipe ID: {recipe.Id}");
-				prompt.AppendLine($"Name: {recipe.Name}");
-				prompt.AppendLine($"Calories: {recipe.Calories}");
-				prompt.AppendLine($"Servings: {recipe.Servings}");
-				prompt.AppendLine($"Total time: {recipe.TotalTime} min");
-				prompt.AppendLine($"Difficulty: {recipe.Difficulty}");
-				prompt.AppendLine($"Cuisine: {recipe.Cuisine}");
+			prompt.AppendLine("MEAL PLAN STRUCTURE REQUIREMENTS:");
+			prompt.AppendLine("Generate a complete 7-day meal plan following this exact structure:");
+			prompt.AppendLine();
+			prompt.AppendLine("1. DAILY MEALS ORGANIZATION:");
+			prompt.AppendLine("   - Structure meals by day of week: monday, tuesday, wednesday, thursday, friday, saturday, sunday");
+			prompt.AppendLine("   - Each day must include: breakfast, lunch, dinner");
+			prompt.AppendLine("   - Each meal must have: id, name, recipe (complete recipe object), servings, mealType");
+			prompt.AppendLine("   - Optional: snacks array, scheduledTime, estimatedPrepTime, estimatedCookTime, estimatedCost");
+			prompt.AppendLine();
+			prompt.AppendLine("2. RECIPE REQUIREMENTS (for each meal):");
+			prompt.AppendLine("   - Generate unique recipe IDs in format: recipe-001, recipe-002, etc.");
+			prompt.AppendLine("   - Include complete recipe with: name, cuisine, steps (detailed cooking instructions)");
+			prompt.AppendLine("   - Provide full ingredients list with: item name, quantity, unit, category, estimatedCost");
+			prompt.AppendLine("   - Set dietary flags: isVegan, isKeto, isDiabeticFriendly based on ingredients");
+			prompt.AppendLine("   - Include: calories per serving, difficulty (easy/medium/hard), totalTime in minutes");
+			prompt.AppendLine("   - Add relevant tags and specify source as 'ai-generated'");
+			prompt.AppendLine();
+			prompt.AppendLine("3. NUTRITION CALCULATIONS:");
+			prompt.AppendLine("   - Calculate nutrition for each meal: calories, protein, carbohydrates, fats, fiber, sugar, sodium");
+			prompt.AppendLine("   - Provide daily nutrition summary for each day");
+			prompt.AppendLine("   - Calculate weekly nutrition summary with totals and averages");
+			prompt.AppendLine("   - Ensure daily calories target is met: " + userInput.TargetCalories + " calories");
+			prompt.AppendLine();
+			prompt.AppendLine("4. COST ESTIMATION:");
+			prompt.AppendLine("   - Estimate cost for each ingredient based on typical grocery prices");
+			prompt.AppendLine("   - Calculate meal costs and daily totals");
+			prompt.AppendLine("   - Provide weekly total estimated cost");
+			prompt.AppendLine();
+			prompt.AppendLine("5. VARIETY AND BALANCE:");
+			prompt.AppendLine("   - Ensure different cuisines across the week (italian, mediterranean, asian, american, etc.)");
+			prompt.AppendLine("   - Balance macronutrients appropriately for each day");
+			prompt.AppendLine("   - Avoid repeating the same recipes");
+			prompt.AppendLine("   - Include seasonal and diverse ingredients");
+			prompt.AppendLine();
+			prompt.AppendLine("6. RECIPE EXAMPLES BY MEAL TYPE:");
+			prompt.AppendLine("   BREAKFAST: Overnight oats, smoothie bowls, avocado toast, scrambled eggs, pancakes");
+			prompt.AppendLine("   LUNCH: Quinoa salads, wraps, soups, grain bowls, sandwiches");
+			prompt.AppendLine("   DINNER: Grilled proteins with vegetables, pasta dishes, stir-fries, roasted meals");
+			prompt.AppendLine();
+			prompt.AppendLine("7. INGREDIENT CATEGORIES:");
+			prompt.AppendLine("   Use these categories: produce, dairy, protein, grains, pantry, spices, herbs, nuts");
+			prompt.AppendLine();
+			prompt.AppendLine("IMPORTANT: Create original, practical recipes with realistic cooking times and commonly available ingredients.");
+			prompt.AppendLine("Ensure all nutrition calculations are accurate and the meal plan is well-balanced and varied.");
 
-				if (recipe.Tags?.Any() == true)
-				{
-					prompt.AppendLine($"Tags: {string.Join(", ", recipe.Tags)}");
-				}
+			//         prompt.AppendLine("AVAILABLE RECIPES:");
 
-				if (recipe.Ingredients?.Any() == true)
-				{
-					prompt.AppendLine($"Key ingredients: {string.Join(", ", recipe.Ingredients.Take(5).Select(i => i.Item ?? i.ToString()))}");
-				}
+			////Group recipes by meal type for better organization
 
-				prompt.AppendLine($"Source: {recipe.Source}");
-				//}
-			}
+			//// var recipesByMealType = recipes.GroupBy(r => r.MealType).ToList();
+			//var recipesByMealType = recipes.ToList();
+			//foreach (var recipe in recipesByMealType)
+			//{
+			//	prompt.AppendLine($"\n RECIPES:");
+
+			//	//foreach (var recipe in mealGroup.Take(15)) // Limit to prevent token overflow
+			//	//{
+			//	prompt.AppendLine($"\nRecipe ID: {recipe.Id}");
+			//	prompt.AppendLine($"Name: {recipe.Name}");
+			//	prompt.AppendLine($"Calories: {recipe.Calories}");
+			//	prompt.AppendLine($"Servings: {recipe.Servings}");
+			//	prompt.AppendLine($"Total time: {recipe.TotalTime} min");
+			//	prompt.AppendLine($"Difficulty: {recipe.Difficulty}");
+			//	prompt.AppendLine($"Cuisine: {recipe.Cuisine}");
+
+			//	if (recipe.Tags?.Any() == true)
+			//	{
+			//		prompt.AppendLine($"Tags: {string.Join(", ", recipe.Tags)}");
+			//	}
+
+			//	if (recipe.Ingredients?.Any() == true)
+			//	{
+			//		prompt.AppendLine($"Key ingredients: {string.Join(", ", recipe.Ingredients.Take(5).Select(i => i.Item ?? i.ToString()))}");
+			//	}
+
+			//	prompt.AppendLine($"Source: {recipe.Source}");
+			//	//}
+			//}
 
 			prompt.AppendLine();
-            prompt.AppendLine("Create a balanced meal plan using these recipes. Ensure variety, nutritional balance, and adherence to all user preferences.");
-
-            return prompt.ToString();
+			//prompt.AppendLine("Create a balanced meal plan using these recipes. Ensure variety, nutritional balance, and adherence to all user preferences.");
+			//prompt.AppendLine("Create a balanced meal plan using these recipes. Ensure variety, nutritional balance, and adherence to all user preferences.");
+			return prompt.ToString();
         }
 
 

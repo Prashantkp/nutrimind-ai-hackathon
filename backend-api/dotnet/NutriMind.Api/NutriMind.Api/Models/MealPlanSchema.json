@@ -1,163 +1,307 @@
 {
     "$schema": "http://json-schema.org/draft-07/schema#",
     "title": "Meal Plan Schema",
+    "description": "Schema for NutriMind meal plan generation matching the MealPlan model",
     "type": "object",
     "properties": {
-        "planId": {
+        "id": {
             "type": "string",
             "description": "Unique identifier for the meal plan"
         },
         "userId": {
             "type": "string",
-            "description": "User identifier (optional)"
+            "description": "User identifier"
         },
-        "planName": {
-            "type": "string",
-            "description": "Name or title for the meal plan"
-        },
-        "totalDays": {
-            "type": "integer",
-            "minimum": 1,
-            "description": "Number of days in the meal plan"
-        },
-        "targetCaloriesPerDay": {
-            "type": "integer",
-            "minimum": 100,
-            "maximum": 5000,
-            "description": "Target daily calorie intake"
-        },
-        "dietaryPreference": {
-            "type": "string",
-            "description": "Primary dietary preference"
-        },
-        "days": {
-            "type": "array",
-            "minItems": 1,
-            "items": {
-                "$ref": "#/definitions/day"
-            }
-        },
-        "nutritionSummary": {
-            "$ref": "#/definitions/nutritionSummary"
-        },
-        "generatedAt": {
+        "weekOf": {
             "type": "string",
             "format": "date-time",
-            "description": "Timestamp when the meal plan was generated"
+            "description": "Monday of the target week"
+        },
+        "weekStartDate": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Alias for weekOf - Monday of the target week"
+        },
+        "weekIdentifier": {
+            "type": "string",
+            "pattern": "^[0-9]{4}-W[0-9]{2}$",
+            "description": "Week identifier in YYYY-Www format (e.g., 2025-W37)"
+        },
+        "status": {
+            "type": "string",
+            "enum": [ "Generating", "Generated", "InProgress", "Completed", "Cancelled", "Failed" ],
+            "description": "Current status of the meal plan"
+        },
+        "dailyMeals": {
+            "type": "object",
+            "description": "Daily meal plans organized by day of week",
+            "properties": {
+                "monday": { "$ref": "#/definitions/dailyMealPlan" },
+                "tuesday": { "$ref": "#/definitions/dailyMealPlan" },
+                "wednesday": { "$ref": "#/definitions/dailyMealPlan" },
+                "thursday": { "$ref": "#/definitions/dailyMealPlan" },
+                "friday": { "$ref": "#/definitions/dailyMealPlan" },
+                "saturday": { "$ref": "#/definitions/dailyMealPlan" },
+                "sunday": { "$ref": "#/definitions/dailyMealPlan" }
+            },
+            "additionalProperties": { "$ref": "#/definitions/dailyMealPlan" }
+        },
+        "weeklyNutritionSummary": {
+            "$ref": "#/definitions/nutritionSummary"
+        },
+        "groceryList": {
+            "$ref": "#/definitions/groceryList"
+        },
+        "totalEstimatedCost": {
+            "type": "number",
+            "minimum": 0,
+            "description": "Total estimated cost for the week"
+        },
+        "preferences": {
+            "$ref": "#/definitions/mealPlanPreferences"
+        },
+        "generationMetadata": {
+            "$ref": "#/definitions/generationMetadata"
+        },
+        "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "When the meal plan was created"
+        },
+        "updatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "When the meal plan was last updated"
+        },
+        "isActive": {
+            "type": "boolean",
+            "description": "Whether the meal plan is active"
+        },
+        "partitionKey": {
+            "type": "string",
+            "description": "Cosmos DB partition key (equals userId)"
         }
     },
-    "required": [ "planId", "planName", "totalDays", "targetCaloriesPerDay", "days", "generatedAt" ],
+    "required": [ "id", "userId", "weekIdentifier", "dailyMeals" ],
     "definitions": {
-        "day": {
+        "dailyMealPlan": {
             "type": "object",
             "properties": {
-                "dayNumber": {
-                    "type": "integer",
-                    "minimum": 1,
-                    "description": "Day number in the plan"
-                },
                 "date": {
                     "type": "string",
-                    "format": "date",
-                    "description": "Date for this day (optional)"
+                    "format": "date-time",
+                    "description": "Date for this day"
+                },
+                "dayOfWeek": {
+                    "type": "string",
+                    "enum": [ "monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday" ],
+                    "description": "Day of the week"
                 },
                 "meals": {
+                    "type": "object",
+                    "description": "Meals for the day organized by meal type",
+                    "properties": {
+                        "breakfast": { "$ref": "#/definitions/meal" },
+                        "lunch": { "$ref": "#/definitions/meal" },
+                        "dinner": { "$ref": "#/definitions/meal" }
+                    },
+                    "additionalProperties": { "$ref": "#/definitions/meal" }
+                },
+                "snacks": {
                     "type": "array",
-                    "minItems": 1,
-                    "items": {
-                        "$ref": "#/definitions/meal"
-                    }
+                    "items": { "$ref": "#/definitions/meal" },
+                    "description": "Snacks for the day"
                 },
                 "dailyNutrition": {
-                    "$ref": "#/definitions/nutrition"
+                    "$ref": "#/definitions/nutritionSummary"
+                },
+                "dailyEstimatedCost": {
+                    "type": "number",
+                    "minimum": 0,
+                    "description": "Total estimated cost for the day"
+                },
+                "notes": {
+                    "type": "string",
+                    "description": "Notes for the day"
                 }
             },
-            "required": [ "dayNumber", "meals", "dailyNutrition" ]
+            "required": [ "date", "dayOfWeek", "meals" ]
         },
         "meal": {
             "type": "object",
             "properties": {
-                "mealType": {
+                "id": {
                     "type": "string",
-                    "enum": [ "Breakfast", "Lunch", "Dinner", "Snack" ],
-                    "description": "Type of meal"
+                    "description": "Unique identifier for the meal"
                 },
-                "mealTime": {
+                "name": {
                     "type": "string",
-                    "description": "Suggested time for the meal (e.g., '8:00 AM')"
+                    "description": "Name of the meal"
                 },
                 "recipe": {
-                    "$ref": "#/definitions/recipeReference"
+                    "$ref": "#/definitions/recipe"
                 },
                 "servings": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "description": "Number of servings"
+                },
+                "mealType": {
+                    "type": "string",
+                    "enum": [ "breakfast", "lunch", "dinner", "snack" ],
+                    "description": "Type of meal"
+                },
+                "scheduledTime": {
+                    "type": "string",
+                    "pattern": "^([0-1]?[0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9]$",
+                    "description": "Scheduled time for the meal in HH:MM:SS format"
+                },
+                "estimatedPrepTime": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "description": "Estimated preparation time in minutes"
+                },
+                "estimatedCookTime": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "description": "Estimated cooking time in minutes"
+                },
+                "estimatedCost": {
                     "type": "number",
-                    "minimum": 0.1,
-                    "description": "Number of servings of this recipe"
+                    "minimum": 0,
+                    "description": "Estimated cost for the meal"
                 },
                 "nutrition": {
-                    "$ref": "#/definitions/nutrition"
+                    "$ref": "#/definitions/nutritionInfo"
+                },
+                "isCompleted": {
+                    "type": "boolean",
+                    "description": "Whether the meal has been completed"
+                },
+                "userRating": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 5,
+                    "description": "User rating (1-5 stars)"
+                },
+                "userNotes": {
+                    "type": "string",
+                    "description": "User notes for the meal"
                 }
             },
-            "required": [ "mealType", "recipe", "servings", "nutrition" ]
+            "required": [ "id", "name", "recipe", "servings", "mealType" ]
         },
-        "recipeReference": {
+        "recipe": {
             "type": "object",
             "properties": {
                 "id": {
                     "type": "string",
-                    "description": "Recipe identifier"
+                    "description": "Unique identifier for the recipe"
                 },
-                "title": {
+                "name": {
                     "type": "string",
-                    "description": "Recipe title"
-                },
-                "description": {
-                    "type": "string",
-                    "description": "Brief recipe description"
-                },
-                "prepTimeMinutes": {
-                    "type": "integer",
-                    "minimum": 0,
-                    "description": "Preparation time in minutes"
-                },
-                "cookTimeMinutes": {
-                    "type": "integer",
-                    "minimum": 0,
-                    "description": "Cooking time in minutes"
-                },
-                "difficulty": {
-                    "type": "string",
-                    "enum": [ "Easy", "Medium", "Hard" ],
-                    "description": "Recipe difficulty level"
+                    "description": "Recipe name"
                 },
                 "cuisine": {
                     "type": "string",
                     "description": "Cuisine type"
                 },
+                "steps": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "description": "Cooking steps/instructions"
+                },
                 "ingredients": {
                     "type": "array",
-                    "items": {
-                        "type": "string"
-                    },
+                    "items": { "$ref": "#/definitions/ingredient" },
                     "description": "List of ingredients"
                 },
-                "instructions": {
+                "isVegan": {
+                    "type": "boolean",
+                    "description": "Whether the recipe is vegan"
+                },
+                "isKeto": {
+                    "type": "boolean",
+                    "description": "Whether the recipe is keto-friendly"
+                },
+                "isDiabeticFriendly": {
+                    "type": "boolean",
+                    "description": "Whether the recipe is diabetic-friendly"
+                },
+                "calories": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "description": "Calories per serving"
+                },
+                "tags": {
                     "type": "array",
                     "items": {
                         "type": "string"
                     },
-                    "description": "Cooking instructions"
+                    "description": "Recipe tags"
+                },
+                "source": {
+                    "type": "string",
+                    "description": "Source of the recipe"
+                },
+                "difficulty": {
+                    "type": "string",
+                    "enum": [ "easy", "medium", "hard" ],
+                    "description": "Recipe difficulty level"
+                },
+                "totalTime": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "description": "Total time in minutes"
+                },
+                "servings": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "description": "Number of servings"
                 }
             },
-            "required": [ "id", "title", "ingredients", "instructions" ]
+            "required": [ "id", "name", "steps", "ingredients" ]
         },
-        "nutrition": {
+        "ingredient": {
+            "type": "object",
+            "properties": {
+                "item": {
+                    "type": "string",
+                    "description": "Ingredient name"
+                },
+                "qty": {
+                    "type": "string",
+                    "description": "Quantity as string (e.g., '1/2', '2')"
+                },
+                "unit": {
+                    "type": "string",
+                    "description": "Unit of measurement"
+                },
+                "category": {
+                    "type": "string",
+                    "description": "Ingredient category (produce, dairy, meat, etc.)"
+                },
+                "estimatedCost": {
+                    "type": "number",
+                    "minimum": 0,
+                    "description": "Estimated cost for this ingredient"
+                },
+                "isOptional": {
+                    "type": "boolean",
+                    "description": "Whether the ingredient is optional"
+                }
+            },
+            "required": [ "item", "qty", "unit" ]
+        },
+        "nutritionInfo": {
             "type": "object",
             "properties": {
                 "calories": {
                     "type": "integer",
                     "minimum": 0,
-                    "description": "Total calories"
+                    "description": "Calories"
                 },
                 "protein": {
                     "type": "number",
@@ -169,10 +313,10 @@
                     "minimum": 0,
                     "description": "Carbohydrates in grams"
                 },
-                "fat": {
+                "fats": {
                     "type": "number",
                     "minimum": 0,
-                    "description": "Fat in grams"
+                    "description": "Fats in grams"
                 },
                 "fiber": {
                     "type": "number",
@@ -190,26 +334,208 @@
                     "description": "Sodium in milligrams"
                 }
             },
-            "required": [ "calories", "protein", "carbohydrates", "fat" ]
+            "required": [ "calories", "protein", "carbohydrates", "fats" ]
         },
         "nutritionSummary": {
             "type": "object",
             "properties": {
+                "totalCalories": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "description": "Total calories"
+                },
+                "totalProtein": {
+                    "type": "number",
+                    "minimum": 0,
+                    "description": "Total protein in grams"
+                },
+                "totalCarbs": {
+                    "type": "number",
+                    "minimum": 0,
+                    "description": "Total carbohydrates in grams"
+                },
+                "totalFats": {
+                    "type": "number",
+                    "minimum": 0,
+                    "description": "Total fats in grams"
+                },
                 "averageDailyCalories": {
                     "type": "integer",
                     "minimum": 0,
-                    "description": "Average daily calories across all days"
+                    "description": "Average daily calories"
                 },
-                "totalDays": {
+                "targetCalories": {
                     "type": "integer",
-                    "minimum": 1,
-                    "description": "Total number of days"
+                    "minimum": 0,
+                    "description": "Target calories"
                 },
-                "averageMacros": {
-                    "$ref": "#/definitions/nutrition"
+                "adherencePercentage": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 100,
+                    "description": "Adherence percentage to targets"
                 }
             },
-            "required": [ "averageDailyCalories", "totalDays", "averageMacros" ]
+            "required": [ "totalCalories", "averageDailyCalories" ]
+        },
+        "groceryList": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string",
+                    "description": "Unique identifier for the grocery list"
+                },
+                "items": {
+                    "type": "array",
+                    "items": { "$ref": "#/definitions/groceryItem" },
+                    "description": "List of grocery items"
+                },
+                "categorizedItems": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "array",
+                        "items": { "$ref": "#/definitions/groceryItem" }
+                    },
+                    "description": "Items categorized by category"
+                },
+                "totalEstimatedCost": {
+                    "type": "number",
+                    "minimum": 0,
+                    "description": "Total estimated cost"
+                },
+                "generatedAt": {
+                    "type": "string",
+                    "format": "date-time",
+                    "description": "When the grocery list was generated"
+                },
+                "isCompleted": {
+                    "type": "boolean",
+                    "description": "Whether shopping is completed"
+                }
+            },
+            "required": [ "id", "items" ]
+        },
+        "groceryItem": {
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string",
+                    "description": "Item name"
+                },
+                "quantity": {
+                    "type": "string",
+                    "description": "Quantity as string"
+                },
+                "unit": {
+                    "type": "string",
+                    "description": "Unit of measurement"
+                },
+                "category": {
+                    "type": "string",
+                    "description": "Item category"
+                },
+                "estimatedCost": {
+                    "type": "number",
+                    "minimum": 0,
+                    "description": "Estimated cost"
+                },
+                "isChecked": {
+                    "type": "boolean",
+                    "description": "Whether item has been obtained"
+                },
+                "usedInRecipes": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "description": "Recipe IDs that use this item"
+                }
+            },
+            "required": [ "name", "quantity", "unit", "category" ]
+        },
+        "mealPlanPreferences": {
+            "type": "object",
+            "properties": {
+                "dietaryPreference": {
+                    "type": "string",
+                    "description": "Dietary preference (e.g., vegan, keto, etc.)"
+                },
+                "allergens": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "description": "List of allergens to avoid"
+                },
+                "dislikes": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "description": "List of disliked foods"
+                },
+                "targetCalories": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "description": "Target daily calories"
+                },
+                "maxPrepTime": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "description": "Maximum preparation time in minutes"
+                },
+                "budgetConstraint": {
+                    "type": "number",
+                    "minimum": 0,
+                    "description": "Budget constraint"
+                },
+                "varietyLevel": {
+                    "type": "string",
+                    "enum": [ "low", "medium", "high" ],
+                    "description": "Desired variety level"
+                }
+            }
+        },
+        "generationMetadata": {
+            "type": "object",
+            "properties": {
+                "startedAt": {
+                    "type": "string",
+                    "format": "date-time",
+                    "description": "When generation started"
+                },
+                "completedAt": {
+                    "type": "string",
+                    "format": "date-time",
+                    "description": "When generation completed"
+                },
+                "orchestrationId": {
+                    "type": "string",
+                    "description": "Orchestration instance ID"
+                },
+                "aiModel": {
+                    "type": "string",
+                    "description": "AI model used for generation"
+                },
+                "recipesConsidered": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "description": "Number of recipes considered"
+                },
+                "generationTime": {
+                    "type": "string",
+                    "pattern": "^P(?:\\d+D)?T(?:\\d+H)?(?:\\d+M)?(?:\\d+(?:\\.\\d+)?S)?$",
+                    "description": "Generation time in ISO 8601 duration format"
+                },
+                "errors": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "description": "Any errors encountered during generation"
+                }
+            },
+            "required": [ "startedAt", "orchestrationId" ]
         }
     }
 }

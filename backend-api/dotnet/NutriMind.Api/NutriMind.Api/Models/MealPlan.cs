@@ -191,7 +191,7 @@ namespace NutriMind.Api.Models
         public string Category { get; set; } = string.Empty; // produce, dairy, meat, etc.
 
         [JsonProperty("estimatedCost")]
-        public decimal EstimatedCost { get; set; }
+        public int EstimatedCost { get; set; }
 
         [JsonProperty("isOptional")]
         public bool IsOptional { get; set; } = false;
