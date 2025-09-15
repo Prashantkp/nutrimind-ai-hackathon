@@ -545,6 +545,124 @@
                 text-align: center;
             }
         }
+
+        /* Snackbar Styles */
+        .snackbar-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 10000;
+            pointer-events: none;
+        }
+
+        .snackbar {
+            background: var(--surface-color);
+            color: var(--text-primary);
+            padding: 1rem 1.5rem;
+            border-radius: 12px;
+            box-shadow: var(--shadow-large);
+            margin-bottom: 0.5rem;
+            max-width: 400px;
+            min-width: 300px;
+            pointer-events: auto;
+            transform: translateX(100%);
+            opacity: 0;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border-left: 4px solid var(--primary-green);
+            position: relative;
+            backdrop-filter: blur(10px);
+        }
+
+        .snackbar.show {
+            transform: translateX(0);
+            opacity: 1;
+        }
+
+        .snackbar.success {
+            border-left-color: var(--primary-green);
+            background: rgba(76, 175, 80, 0.1);
+        }
+
+        .snackbar.error {
+            border-left-color: #f44336;
+            background: rgba(244, 67, 54, 0.1);
+        }
+
+        .snackbar.warning {
+            border-left-color: #ff9800;
+            background: rgba(255, 152, 0, 0.1);
+        }
+
+        .snackbar.info {
+            border-left-color: #2196f3;
+            background: rgba(33, 150, 243, 0.1);
+        }
+
+        .snackbar-content {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.75rem;
+        }
+
+        .snackbar-icon {
+            font-size: 1.2rem;
+            line-height: 1;
+            margin-top: 2px;
+        }
+
+        .snackbar-message {
+            flex: 1;
+            font-size: 0.95rem;
+            line-height: 1.4;
+            white-space: pre-line;
+        }
+
+        .snackbar-close {
+            background: none;
+            border: none;
+            color: var(--text-light);
+            cursor: pointer;
+            font-size: 1.2rem;
+            padding: 0;
+            margin-left: 0.5rem;
+            opacity: 0.7;
+            transition: opacity 0.2s ease;
+        }
+
+        .snackbar-close:hover {
+            opacity: 1;
+        }
+
+        .snackbar-actions {
+            margin-top: 0.75rem;
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .snackbar-btn {
+            background: var(--primary-green);
+            color: white;
+            border: none;
+            padding: 0.4rem 0.8rem;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+
+        .snackbar-btn:hover {
+            background: var(--primary-green-dark);
+        }
+
+        .snackbar-btn.secondary {
+            background: transparent;
+            color: var(--text-light);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .snackbar-btn.secondary:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
     </style>
 </head>
 <body class="purchase-page">
@@ -677,6 +795,80 @@
 
     <script src="js/common.js"></script>
     <script>
+        // Snackbar System
+        function showSnackbar(message, type = 'info', duration = 5000, actions = null) {
+            const container = document.getElementById('snackbar-container');
+            const snackbar = document.createElement('div');
+            const snackbarId = 'snackbar-' + Date.now();
+            
+            const icons = {
+                success: '✅',
+                error: '❌',
+                warning: '⚠️',
+                info: 'ℹ️'
+            };
+            
+            snackbar.className = `snackbar ${type}`;
+            snackbar.id = snackbarId;
+            
+            let actionsHtml = '';
+            if (actions) {
+                actionsHtml = `
+                    <div class="snackbar-actions">
+                        ${actions.map(action => 
+                            `<button class="snackbar-btn ${action.style || ''}" onclick="${action.action}; removeSnackbar('${snackbarId}')">${action.text}</button>`
+                        ).join('')}
+                    </div>
+                `;
+            }
+            
+            snackbar.innerHTML = `
+                <div class="snackbar-content">
+                    <div class="snackbar-icon">${icons[type] || icons.info}</div>
+                    <div class="snackbar-message">${message}</div>
+                    <button class="snackbar-close" onclick="removeSnackbar('${snackbarId}')" aria-label="Close">×</button>
+                </div>
+                ${actionsHtml}
+            `;
+            
+            container.appendChild(snackbar);
+            
+            // Trigger animation
+            requestAnimationFrame(() => {
+                snackbar.classList.add('show');
+            });
+            
+            // Auto remove
+            if (duration > 0) {
+                setTimeout(() => {
+                    removeSnackbar(snackbarId);
+                }, duration);
+            }
+            
+            return snackbarId;
+        }
+
+        function removeSnackbar(snackbarId) {
+            const snackbar = document.getElementById(snackbarId);
+            if (snackbar) {
+                snackbar.classList.remove('show');
+                setTimeout(() => {
+                    if (snackbar.parentNode) {
+                        snackbar.parentNode.removeChild(snackbar);
+                    }
+                }, 300);
+            }
+        }
+
+        function showConfirmSnackbar(message, onConfirm, onCancel = null) {
+            const actions = [
+                { text: 'Confirm', action: `(${onConfirm.toString()})()`, style: '' },
+                { text: 'Cancel', action: onCancel ? `(${onCancel.toString()})()` : '', style: 'secondary' }
+            ];
+            
+            return showSnackbar(message, 'warning', 0, actions);
+        }
+
         let buyList = [];
         
         // Load buy list from localStorage
@@ -769,46 +961,62 @@
 
         // Remove item
         function removeItem(id) {
-            if (confirm('Remove this item from your shopping list?')) {
-                buyList = buyList.filter(item => item.id !== id);
-                localStorage.setItem('nutrimind_buylist', JSON.stringify(buyList));
-                renderBuyList();
-                updateStats();
-            }
+            const item = buyList.find(item => item.id === id);
+            const itemName = item ? item.ingredient : 'this item';
+            
+            showConfirmSnackbar(
+                `Remove ${itemName} from your shopping list?`,
+                () => {
+                    buyList = buyList.filter(item => item.id !== id);
+                    localStorage.setItem('nutrimind_buylist', JSON.stringify(buyList));
+                    renderBuyList();
+                    updateStats();
+                    showSnackbar(`${itemName} removed from your list!`, 'success', 3000);
+                }
+            );
         }
 
         // Clear all items
         function clearAll() {
-            if (confirm('Clear your entire shopping list?')) {
-                buyList = [];
-                localStorage.setItem('nutrimind_buylist', JSON.stringify(buyList));
-                renderBuyList();
-                updateStats();
+            if (buyList.length === 0) {
+                showSnackbar('Your shopping list is already empty!', 'info', 3000);
+                return;
             }
+            
+            showConfirmSnackbar(
+                `Clear all ${buyList.length} items from your shopping list?`,
+                () => {
+                    buyList = [];
+                    localStorage.setItem('nutrimind_buylist', JSON.stringify(buyList));
+                    renderBuyList();
+                    updateStats();
+                    showSnackbar('Shopping list cleared! ✨', 'success', 3000);
+                }
+            );
         }
 
         // Select all items
         function selectAll() {
             buyList.forEach(item => item.selected = true);
             // In a real app, this would update the UI to show selected items
-            alert('All items selected for ordering!');
+            showSnackbar('All items selected for ordering! 🛒', 'success', 3000);
         }
 
         // Order selected items
         function orderSelected() {
             const pendingItems = buyList.filter(item => !item.purchased);
             if (pendingItems.length === 0) {
-                alert('No items to order. All items are already purchased!');
+                showSnackbar('All your items are already purchased! 🎉', 'info', 3000);
                 return;
             }
             
-            alert(`${pendingItems.length} items ready to order. Please select a vendor below to proceed.`);
+            showSnackbar(`${pendingItems.length} items ready to order! Please select a vendor below to continue.`, 'info', 4000);
         }
 
         // Select vendor
         function selectVendor(vendor) {
             const pendingItems = buyList.filter(item => !item.purchased);
-            const itemList = pendingItems.map(item => `${item.quantity}x ${item.ingredient}`).join('\n');
+            const itemList = pendingItems.map(item => `${item.quantity}x ${item.ingredient}`).join(', ');
             
             const vendorNames = {
                 'instacart': 'Instacart',
@@ -816,24 +1024,33 @@
                 'walmart': 'Walmart+'
             };
 
-            if (confirm(`Order ${pendingItems.length} items via ${vendorNames[vendor]}?\n\nItems:\n${itemList}\n\nThis will redirect you to ${vendorNames[vendor]} to complete your order.`)) {
-                // In a real app, this would integrate with vendor APIs
-                alert(`Redirecting to ${vendorNames[vendor]}...`);
-                
-                // Mark items as ordered (in a real app, this would happen after successful order)
-                setTimeout(() => {
-                    if (confirm('Order placed successfully! Mark items as purchased?')) {
-                        buyList.forEach(item => {
-                            if (!item.purchased) {
-                                item.purchased = true;
+            const message = `Order ${pendingItems.length} items via ${vendorNames[vendor]}?\n\nItems: ${itemList}\n\nThis will redirect you to ${vendorNames[vendor]} to complete your order.`;
+            
+            showConfirmSnackbar(
+                message,
+                () => {
+                    // In a real app, this would integrate with vendor APIs
+                    showSnackbar(`Redirecting to ${vendorNames[vendor]}... 🚀`, 'info', 2000);
+                    
+                    // Mark items as ordered (in a real app, this would happen after successful order)
+                    setTimeout(() => {
+                        showConfirmSnackbar(
+                            `Order placed successfully with ${vendorNames[vendor]}! 🎉\n\nMark all items as purchased in your list?`,
+                            () => {
+                                buyList.forEach(item => {
+                                    if (!item.purchased) {
+                                        item.purchased = true;
+                                    }
+                                });
+                                localStorage.setItem('nutrimind_buylist', JSON.stringify(buyList));
+                                renderBuyList();
+                                updateStats();
+                                showSnackbar(`All items marked as purchased! Your shopping is complete. 🛍️`, 'success', 4000);
                             }
-                        });
-                        localStorage.setItem('nutrimind_buylist', JSON.stringify(buyList));
-                        renderBuyList();
-                        updateStats();
-                    }
-                }, 1000);
-            }
+                        );
+                    }, 2000);
+                }
+            );
         }
 
         // Initialize the page
@@ -841,5 +1058,8 @@
             loadBuyList();
         });
     </script>
+
+    <!-- Snackbar Container -->
+    <div id="snackbar-container" class="snackbar-container"></div>
 </body>
 </html>
