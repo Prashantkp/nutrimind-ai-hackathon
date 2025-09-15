@@ -11,6 +11,7 @@ import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatDialog } from '@angular/material/dialog';
 import { MealPlanService } from '../../core/services/meal-plan.service';
+import { HealthyTipService } from '../../core/services/healthy-tip.service';
 import { RecipeDetailDialogComponent } from './recipe-detail-dialog';
 import { 
   MealPlan, 
@@ -19,6 +20,7 @@ import {
   Meal,
   MealPlanStatus 
 } from '../../shared/models/meal-plan.models';
+import { HealthyTip } from '../../shared/models/healthy-tip.models';
 
 @Component({
   selector: 'app-dashboard',
@@ -38,6 +40,7 @@ import {
 })
 export class DashboardComponent implements OnInit {
   private mealPlanService = inject(MealPlanService);
+  private healthyTipService = inject(HealthyTipService);
   private snackBar = inject(MatSnackBar);
   private dialog = inject(MatDialog);
 
@@ -63,7 +66,11 @@ export class DashboardComponent implements OnInit {
     
     return hasData;
   }
-
+  getRandomTip = signal<HealthyTip>({
+    tip: 'Stay hydrated and eat a variety of colorful fruits and vegetables!',
+    fontcolor: '#4caf50',
+    backgroundcolor: '#ffffff'
+  });
   // Status enum for template
   MealPlanStatus = MealPlanStatus;
 
@@ -85,6 +92,7 @@ export class DashboardComponent implements OnInit {
     };
     
     this.initializeDashboard();
+    this.fetchHealthyTips();  
   }
 
   private async initializeDashboard() {
@@ -99,6 +107,17 @@ export class DashboardComponent implements OnInit {
       console.error('Error initializing dashboard:', error);
       this.error.set('Failed to load dashboard data');
     }
+  }
+
+  fetchHealthyTips() {
+    this.healthyTipService.getHealthyContent().subscribe({
+      next: (response) => {
+        this.getRandomTip.set(response);
+      },
+      error: (error) => {
+        console.error('Error fetching healthy content:', error);
+      }
+    });
   }
 
   async loadWeekMealPlan(weekIndex: number) {

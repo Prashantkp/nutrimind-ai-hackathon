@@ -23,6 +23,7 @@ namespace NutriMind.Api.Services
         Task<MealPlan> ParseMealPlanResponseAsync(string aiResponse, string userId, string weekIdentifier);
         Task<string> ValidateNutritionAsync(MealPlan mealPlan, UserProfile userProfile);
         Task<List<string>> GenerateHealthInsightsAsync(UserProfile userProfile, MealPlan mealPlan);
+        Task<string> ProvideHealthyTip(string userPrompt);
     }
 
     public class OpenAIService : IOpenAIService
@@ -34,14 +35,20 @@ namespace NutriMind.Api.Services
 		private JSchema? _mealPlanSchema;
         private readonly string _schemaPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Models", "MealPlanSchema.json");
 
-		public OpenAIService(IConfiguration configuration, ILogger<OpenAIService> logger)
+        private const string ChatAssistantInstruction = @"
+            You are an AI assistant that helps people with healthy tips for maintaining good food habits. 
+            Provide them motivation with proven scientific facts about advantage of healthy eating habits. Keep the response limited to 200 characters. 
+            Be creative and funny sometime while providing a quote.Suggest intuitive font clor and background color based on the quote. 
+            Provide the response in the JSON format with tip,fontcolor and backgroundcolor properties.";
+
+        public OpenAIService(IConfiguration configuration, ILogger<OpenAIService> logger)
         {
             _logger = logger;
 			var keyVaultUri = configuration["KeyVaultUri"];
 			var kvClient = new SecretClient(new Uri(keyVaultUri), new DefaultAzureCredential());
 			var endpoint = kvClient.GetSecret("openai-endpoint").Value.Value; 
             var apiKey = kvClient.GetSecret("openai-api-key").Value.Value;
-			_deploymentName = configuration["OpenAiDeployment"] ?? "gpt-5-mini";
+            _deploymentName = configuration["OpenAiDeployment"] ?? "gpt-5-mini";
 
 			if (string.IsNullOrEmpty(endpoint) || string.IsNullOrEmpty(apiKey))
             {
@@ -60,6 +67,30 @@ namespace NutriMind.Api.Services
 			_chatClient = _openAIClient.GetChatClient(_deploymentName);
 		}
 
+        public async Task<string> ProvideHealthyTip(string userPrompt)
+        {
+            if (_openAIClient == null)
+            {
+                // Mock response when OpenAI client is not configured
+                return "Eat more veggies! Healthy eating is the key to a happy life!";
+            }
+            try
+            {
+                var messages = new List<ChatMessage>
+                {
+                    new SystemChatMessage(ChatAssistantInstruction),
+                    new UserChatMessage(userPrompt)
+                };
+                ChatCompletion completion = await _chatClient.CompleteChatAsync(messages);
+                string response = completion.Content[0].Text.Trim();
+                return response;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error while calling Azure OpenAI service.");
+                return "Sorry, I couldn't fetch a healthy tip at the moment. Please try again later.";
+            }
+        }
         public async Task<string> GenerateWeeklyMealPlanAsync(UserProfile userProfile, List<Recipe> candidateRecipes)
         {
             _logger.LogInformation("Generating weekly meal plan for user {UserId}", userProfile.UserId);

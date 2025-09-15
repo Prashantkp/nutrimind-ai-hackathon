@@ -1,8 +1,25 @@
 <div class="dashboard-container">
   <!-- Header -->
   <div class="dashboard-header">
-    <h1>Your Weekly Meal Plans</h1>
-    <p class="subtitle">Plan, cook, and enjoy healthy meals tailored just for you</p>
+    <div class="header-content">
+      <img src="assets/images/dashboard_banner.png" alt="Healthy Eating" class="header-image">
+      <div class="header-text">
+        <h1>Your Weekly Meal Plans</h1>
+        <p class="subtitle">Plan, cook, and enjoy healthy meals tailored just for you</p>
+      </div>
+       <!-- Tip and Quote section -->
+      <div class="tip-card">
+        <mat-card>
+          <mat-card-header>
+            <mat-icon mat-card-avatar>lightbulb</mat-icon>
+            <mat-card-title>Today's Tip</mat-card-title>
+          </mat-card-header>
+          <mat-card-content>
+            <p>{{ getRandomTip().tip }}</p>
+          </mat-card-content>
+        </mat-card>
+      </div>
+    </div>
   </div>
 
   <!-- Week Selection Tabs -->
@@ -435,4 +452,4 @@
 
     <!-- End of meal-plan-content -->
   }
-</div>
+  </div>
