@@ -1,0 +1,750 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profile Setup - NutriMind</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/main.css">
+    <style>
+        .profile-page {
+            background: linear-gradient(135deg, #e8f5e8 0%, #f1f8e9 100%);
+            min-height: 100vh;
+            padding: 2rem 0;
+        }
+
+        .profile-container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+
+        .profile-header {
+            text-align: center;
+            margin-bottom: 3rem;
+            animation: slideUp 0.8s ease-out;
+        }
+
+        /* Logo Styles */
+        .profile-logo {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .logo-icon {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #ffffff 0%, rgba(255,255,255,0.9) 100%);
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            box-shadow: 0 8px 32px rgba(76, 175, 80, 0.15);
+            border: 1px solid rgba(76, 175, 80, 0.1);
+        }
+
+        .logo-icon::before {
+            content: '';
+            position: absolute;
+            width: 24px;
+            height: 24px;
+            background: var(--primary-green);
+            border-radius: 50%;
+            top: 10px;
+            left: 10px;
+            opacity: 0.8;
+        }
+
+        .logo-icon::after {
+            content: '';
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background: var(--accent-orange);
+            border-radius: 50%;
+            top: 40px;
+            right: 12px;
+            animation: pulse 2s infinite;
+        }
+
+        .logo-text {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .logo-name {
+            font-size: 2rem;
+            font-weight: 700;
+            margin: 0;
+            letter-spacing: -0.5px;
+            background: linear-gradient(135deg, var(--primary-green) 0%, var(--text-dark) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .logo-tagline {
+            font-size: 0.8rem;
+            font-weight: 500;
+            margin: 0;
+            opacity: 0.8;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: var(--text-light);
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 0.8;
+                transform: scale(1);
+            }
+            50% {
+                opacity: 1;
+                transform: scale(1.2);
+            }
+        }
+
+        .profile-header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(135deg, var(--primary-green) 0%, var(--text-dark) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .profile-header p {
+            font-size: 1.1rem;
+            color: var(--text-light);
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: rgba(76, 175, 80, 0.1);
+            border-radius: 4px;
+            margin: 2rem 0;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary-green) 0%, var(--primary-green-light) 100%);
+            border-radius: 4px;
+            transition: width 0.5s ease;
+        }
+
+        .form-section {
+            background: white;
+            border-radius: 16px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: var(--shadow-light);
+            border: 1px solid rgba(76, 175, 80, 0.1);
+            animation: fadeIn 0.6s ease-out;
+        }
+
+        .form-section h3 {
+            color: var(--primary-green);
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group-full {
+            grid-column: 1 / -1;
+        }
+
+        /* Slider Styles */
+        .slider-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .slider-container {
+            position: relative;
+            margin-top: 1rem;
+        }
+
+        .slider {
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: #E0E0E0;
+            outline: none;
+            -webkit-appearance: none;
+            appearance: none;
+        }
+
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: var(--primary-green);
+            cursor: pointer;
+            box-shadow: 0 2px 6px rgba(76, 175, 80, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        .slider::-webkit-slider-thumb:hover {
+            transform: scale(1.1);
+            box-shadow: 0 4px 12px rgba(76, 175, 80, 0.4);
+        }
+
+        .slider-value {
+            position: absolute;
+            top: -35px;
+            background: var(--primary-green);
+            color: white;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            transform: translateX(-50%);
+            white-space: nowrap;
+        }
+
+        .slider-labels {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 0.5rem;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        /* Checkbox and Tag Styles */
+        .checkbox-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 0.75rem;
+        }
+
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            padding: 0.75rem;
+            border: 2px solid #E0E0E0;
+            border-radius: var(--border-radius-small);
+            cursor: pointer;
+            transition: var(--transition);
+            background: white;
+        }
+
+        .checkbox-item:hover {
+            border-color: var(--primary-green-light);
+            background: rgba(76, 175, 80, 0.05);
+        }
+
+        .checkbox-item.selected {
+            border-color: var(--primary-green);
+            background: rgba(76, 175, 80, 0.1);
+        }
+
+        .checkbox-item input[type="checkbox"] {
+            display: none;
+        }
+
+        .checkbox-custom {
+            width: 20px;
+            height: 20px;
+            border: 2px solid #E0E0E0;
+            border-radius: 4px;
+            margin-right: 0.75rem;
+            position: relative;
+            transition: var(--transition);
+        }
+
+        .checkbox-item.selected .checkbox-custom {
+            background: var(--primary-green);
+            border-color: var(--primary-green);
+        }
+
+        .checkbox-item.selected .checkbox-custom::after {
+            content: '✓';
+            position: absolute;
+            color: white;
+            font-size: 12px;
+            font-weight: bold;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        /* Tag Input Styles */
+        .tag-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            padding: 0.75rem;
+            border: 2px solid #E0E0E0;
+            border-radius: var(--border-radius-small);
+            background: white;
+            min-height: 50px;
+            cursor: text;
+        }
+
+        .tag-container:focus-within {
+            border-color: var(--primary-green);
+            box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.1);
+        }
+
+        .tag {
+            background: var(--primary-green);
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            animation: scaleIn 0.3s ease;
+        }
+
+        .tag-remove {
+            cursor: pointer;
+            font-weight: bold;
+            line-height: 1;
+        }
+
+        .tag-input {
+            border: none;
+            outline: none;
+            background: transparent;
+            flex: 1;
+            min-width: 100px;
+            font-family: inherit;
+        }
+
+        .navigation-buttons {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 3rem;
+            animation: slideUp 0.6s ease-out 0.5s both;
+        }
+
+        .btn-complete {
+            background: linear-gradient(135deg, var(--primary-green) 0%, var(--primary-green-dark) 100%);
+            padding: 1rem 2rem;
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .profile-container {
+                padding: 0 1rem;
+            }
+
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+
+            .checkbox-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .navigation-buttons {
+                flex-direction: column;
+                gap: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="profile-page">
+        <div class="profile-container">
+            <!-- Header -->
+            <div class="profile-header">
+                <div class="profile-logo">
+                    <div class="logo-icon">
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+                            <path d="M12 2L15.5 8.5L22 9L17 14L18.5 21L12 17.5L5.5 21L7 14L2 9L8.5 8.5L12 2Z" fill="#4CAF50" stroke="#4CAF50" stroke-width="1"/>
+                            <circle cx="16" cy="6" r="2" fill="#FF9800"/>
+                            <path d="M8 16C8 16 10 18 12 16C14 18 16 16 16 16" stroke="#4CAF50" stroke-width="1.5" stroke-linecap="round"/>
+                        </svg>
+                    </div>
+                    <div class="logo-text">
+                        <h1 class="logo-name">Nutrimind AI</h1>
+                        <p class="logo-tagline">Smart Nutrition</p>
+                    </div>
+                </div>
+                <h1>Complete Your Profile</h1>
+                <p>Help us create the perfect meal plans tailored just for you</p>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+                </div>
+            </div>
+
+            <form id="profileForm" onsubmit="handleSubmit(event)">
+                <!-- Basic Information -->
+                <div class="form-section">
+                    <h3>
+                        <svg width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+                        </svg>
+                        Basic Information
+                    </h3>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Age</label>
+                            <input type="number" class="form-input" id="age" min="18" max="100" value="25" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Gender</label>
+                            <select class="form-select" id="gender" required>
+                                <option value="">Select Gender</option>
+                                <option value="male">Male</option>
+                                <option value="female">Female</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="slider-group">
+                            <label class="form-label">Height (cm)</label>
+                            <div class="slider-container">
+                                <input type="range" class="slider" id="height" min="140" max="220" value="170">
+                                <div class="slider-value" id="heightValue">170 cm</div>
+                            </div>
+                            <div class="slider-labels">
+                                <span>140 cm</span>
+                                <span>220 cm</span>
+                            </div>
+                        </div>
+                        <div class="slider-group">
+                            <label class="form-label">Weight (kg)</label>
+                            <div class="slider-container">
+                                <input type="range" class="slider" id="weight" min="40" max="150" value="70">
+                                <div class="slider-value" id="weightValue">70 kg</div>
+                            </div>
+                            <div class="slider-labels">
+                                <span>40 kg</span>
+                                <span>150 kg</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Activity Level</label>
+                        <select class="form-select" id="activityLevel" required>
+                            <option value="">Select Activity Level</option>
+                            <option value="sedentary">Sedentary (little/no exercise)</option>
+                            <option value="light">Light (light exercise 1-3 days/week)</option>
+                            <option value="moderate">Moderate (moderate exercise 3-5 days/week)</option>
+                            <option value="active">Very Active (hard exercise 6-7 days/week)</option>
+                            <option value="extra">Extra Active (very hard exercise, training)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Dietary Preferences -->
+                <div class="form-section">
+                    <h3>
+                        <svg width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M8.1 13.34l2.83-2.83L3.91 3.5c-1.56 1.56-1.56 4.09 0 5.66l4.19 4.18zm6.78-1.81c1.53.71 3.68.21 5.27-1.38 1.91-1.91 2.28-4.65.81-6.12-1.46-1.46-4.20-1.10-6.12.81-1.59 1.59-2.09 3.74-1.38 5.27L3.7 19.87l1.41 1.41L12 14.41l6.88 6.88 1.41-1.41L13.41 13l1.47-1.47z"/>
+                        </svg>
+                        Dietary Preferences
+                    </h3>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Diet Type</label>
+                        <div class="checkbox-grid">
+                            <div class="checkbox-item" onclick="toggleCheckbox('vegetarian')">
+                                <div class="checkbox-custom"></div>
+                                <input type="checkbox" id="vegetarian" name="dietType" value="vegetarian">
+                                <label>Vegetarian</label>
+                            </div>
+                            <div class="checkbox-item" onclick="toggleCheckbox('vegan')">
+                                <div class="checkbox-custom"></div>
+                                <input type="checkbox" id="vegan" name="dietType" value="vegan">
+                                <label>Vegan</label>
+                            </div>
+                            <div class="checkbox-item" onclick="toggleCheckbox('pescatarian')">
+                                <div class="checkbox-custom"></div>
+                                <input type="checkbox" id="pescatarian" name="dietType" value="pescatarian">
+                                <label>Pescatarian</label>
+                            </div>
+                            <div class="checkbox-item" onclick="toggleCheckbox('keto')">
+                                <div class="checkbox-custom"></div>
+                                <input type="checkbox" id="keto" name="dietType" value="keto">
+                                <label>Keto</label>
+                            </div>
+                            <div class="checkbox-item" onclick="toggleCheckbox('paleo')">
+                                <div class="checkbox-custom"></div>
+                                <input type="checkbox" id="paleo" name="dietType" value="paleo">
+                                <label>Paleo</label>
+                            </div>
+                            <div class="checkbox-item" onclick="toggleCheckbox('mediterranean')">
+                                <div class="checkbox-custom"></div>
+                                <input type="checkbox" id="mediterranean" name="dietType" value="mediterranean">
+                                <label>Mediterranean</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Allergies & Restrictions -->
+                <div class="form-section">
+                    <h3>
+                        <svg width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                        </svg>
+                        Allergies & Restrictions
+                    </h3>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Food Allergies (Type and press Enter)</label>
+                        <div class="tag-container" id="allergiesContainer" onclick="focusTagInput('allergiesInput')">
+                            <input type="text" class="tag-input" id="allergiesInput" placeholder="e.g., nuts, dairy, gluten" onkeydown="handleTagInput(event, 'allergies')">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Food Dislikes (Type and press Enter)</label>
+                        <div class="tag-container" id="dislikesContainer" onclick="focusTagInput('dislikesInput')">
+                            <input type="text" class="tag-input" id="dislikesInput" placeholder="e.g., spicy food, mushrooms" onkeydown="handleTagInput(event, 'dislikes')">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Goals & Preferences -->
+                <div class="form-section">
+                    <h3>
+                        <svg width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                        </svg>
+                        Goals & Preferences
+                    </h3>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Primary Goal</label>
+                        <select class="form-select" id="primaryGoal" required>
+                            <option value="">Select Your Primary Goal</option>
+                            <option value="weight_loss">Weight Loss</option>
+                            <option value="weight_gain">Weight Gain</option>
+                            <option value="muscle_gain">Muscle Gain</option>
+                            <option value="maintenance">Weight Maintenance</option>
+                            <option value="health">General Health</option>
+                        </select>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="slider-group">
+                            <label class="form-label">Budget per week (USD)</label>
+                            <div class="slider-container">
+                                <input type="range" class="slider" id="budget" min="20" max="200" value="80">
+                                <div class="slider-value" id="budgetValue">$80</div>
+                            </div>
+                            <div class="slider-labels">
+                                <span>$20</span>
+                                <span>$200</span>
+                            </div>
+                        </div>
+                        <div class="slider-group">
+                            <label class="form-label">Cooking Time Preference (minutes)</label>
+                            <div class="slider-container">
+                                <input type="range" class="slider" id="cookingTime" min="15" max="120" value="45">
+                                <div class="slider-value" id="cookingTimeValue">45 min</div>
+                            </div>
+                            <div class="slider-labels">
+                                <span>15 min</span>
+                                <span>120 min</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="navigation-buttons">
+                    <a href="register.html" class="btn btn-secondary">Back to Register</a>
+                    <button type="submit" class="btn btn-primary btn-complete">Complete Profile</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        let allergies = [];
+        let dislikes = [];
+
+        // Slider functionality
+        function initializeSliders() {
+            const sliders = [
+                { id: 'height', valueId: 'heightValue', suffix: ' cm' },
+                { id: 'weight', valueId: 'weightValue', suffix: ' kg' },
+                { id: 'budget', valueId: 'budgetValue', prefix: '$' },
+                { id: 'cookingTime', valueId: 'cookingTimeValue', suffix: ' min' }
+            ];
+
+            sliders.forEach(slider => {
+                const element = document.getElementById(slider.id);
+                const valueElement = document.getElementById(slider.valueId);
+                
+                element.addEventListener('input', function() {
+                    const value = this.value;
+                    const prefix = slider.prefix || '';
+                    const suffix = slider.suffix || '';
+                    valueElement.textContent = `${prefix}${value}${suffix}`;
+                    
+                    // Position the value indicator
+                    const percent = ((value - this.min) / (this.max - this.min)) * 100;
+                    valueElement.style.left = `${percent}%`;
+                });
+                
+                // Trigger initial update
+                element.dispatchEvent(new Event('input'));
+            });
+        }
+
+        // Checkbox functionality
+        function toggleCheckbox(id) {
+            const checkbox = document.getElementById(id);
+            const item = checkbox.closest('.checkbox-item');
+            
+            checkbox.checked = !checkbox.checked;
+            
+            if (checkbox.checked) {
+                item.classList.add('selected');
+            } else {
+                item.classList.remove('selected');
+            }
+        }
+
+        // Tag input functionality
+        function focusTagInput(inputId) {
+            document.getElementById(inputId).focus();
+        }
+
+        function handleTagInput(event, type) {
+            if (event.key === 'Enter' || event.key === ',') {
+                event.preventDefault();
+                const input = event.target;
+                const value = input.value.trim();
+                
+                if (value) {
+                    addTag(value, type);
+                    input.value = '';
+                }
+            }
+        }
+
+        function addTag(value, type) {
+            const array = type === 'allergies' ? allergies : dislikes;
+            const containerId = type === 'allergies' ? 'allergiesContainer' : 'dislikesContainer';
+            
+            if (!array.includes(value)) {
+                array.push(value);
+                renderTags(type, containerId);
+            }
+        }
+
+        function removeTag(value, type) {
+            const array = type === 'allergies' ? allergies : dislikes;
+            const containerId = type === 'allergies' ? 'allergiesContainer' : 'dislikesContainer';
+            const index = array.indexOf(value);
+            
+            if (index > -1) {
+                array.splice(index, 1);
+                renderTags(type, containerId);
+            }
+        }
+
+        function renderTags(type, containerId) {
+            const container = document.getElementById(containerId);
+            const array = type === 'allergies' ? allergies : dislikes;
+            const inputId = type === 'allergies' ? 'allergiesInput' : 'dislikesInput';
+            
+            // Clear existing tags
+            const existingTags = container.querySelectorAll('.tag');
+            existingTags.forEach(tag => tag.remove());
+            
+            // Add tags
+            array.forEach(tag => {
+                const tagElement = document.createElement('div');
+                tagElement.className = 'tag';
+                tagElement.innerHTML = `
+                    ${tag}
+                    <span class="tag-remove" onclick="removeTag('${tag}', '${type}')">×</span>
+                `;
+                container.insertBefore(tagElement, document.getElementById(inputId));
+            });
+        }
+
+        // Form submission
+        function handleSubmit(event) {
+            event.preventDefault();
+            
+            const formData = {
+                age: document.getElementById('age').value,
+                gender: document.getElementById('gender').value,
+                height: document.getElementById('height').value,
+                weight: document.getElementById('weight').value,
+                activityLevel: document.getElementById('activityLevel').value,
+                dietTypes: Array.from(document.querySelectorAll('input[name="dietType"]:checked')).map(cb => cb.value),
+                allergies: allergies,
+                dislikes: dislikes,
+                primaryGoal: document.getElementById('primaryGoal').value,
+                budget: document.getElementById('budget').value,
+                cookingTime: document.getElementById('cookingTime').value
+            };
+            
+            console.log('Profile Data:', formData);
+            
+            // Simulate saving process
+            const btn = event.target.querySelector('.btn-complete');
+            btn.innerHTML = 'Saving Profile...';
+            btn.disabled = true;
+            
+            setTimeout(() => {
+                alert('Profile saved successfully! Redirecting to your dashboard...');
+                window.location.href = 'dashboard.html';
+            }, 2000);
+        }
+
+        // Progress bar animation
+        function updateProgress() {
+            const form = document.getElementById('profileForm');
+            const inputs = form.querySelectorAll('input[required], select[required]');
+            const filled = Array.from(inputs).filter(input => {
+                if (input.type === 'checkbox') {
+                    return document.querySelectorAll('input[name="dietType"]:checked').length > 0;
+                }
+                return input.value.trim() !== '';
+            }).length;
+            
+            const progress = (filled / inputs.length) * 100;
+            document.getElementById('progressFill').style.width = progress + '%';
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeSliders();
+            
+            // Add progress tracking
+            const form = document.getElementById('profileForm');
+            form.addEventListener('input', updateProgress);
+            form.addEventListener('change', updateProgress);
+            
+            // Initial progress update
+            updateProgress();
+        });
+    </script>
+</body>
+</html>

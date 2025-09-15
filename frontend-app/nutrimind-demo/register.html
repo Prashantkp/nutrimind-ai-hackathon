@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register - NutriMind</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/main.css">
+    <style>
+        .register-page {
+            background: linear-gradient(135deg, #e8f5e8 0%, #f1f8e9 50%, #e8f5e8 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
+
+        .register-container {
+            max-width: 480px;
+            width: 100%;
+        }
+
+        .brand-header {
+            text-align: center;
+            margin-bottom: 2rem;
+            animation: slideUp 0.8s ease-out;
+        }
+
+        .brand-logo {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, var(--primary-green) 0%, var(--primary-green-dark) 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1rem;
+            box-shadow: var(--shadow-medium);
+            animation: scaleIn 0.6s ease-out 0.2s both;
+        }
+
+        .brand-logo svg {
+            width: 40px;
+            height: 40px;
+            fill: white;
+        }
+
+        .brand-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--primary-green) 0%, var(--text-dark) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 0.5rem;
+        }
+
+        .brand-subtitle {
+            color: var(--text-light);
+            font-size: 1.1rem;
+        }
+
+        .register-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 3rem;
+            box-shadow: var(--shadow-heavy);
+            border: 1px solid rgba(76, 175, 80, 0.1);
+            animation: fadeIn 0.8s ease-out 0.4s both;
+        }
+
+        .register-form .form-group {
+            margin-bottom: 1.5rem;
+            animation: slideUp 0.6s ease-out;
+        }
+
+        .register-form .form-group:nth-child(1) { animation-delay: 0.6s; animation-fill-mode: both; }
+        .register-form .form-group:nth-child(2) { animation-delay: 0.7s; animation-fill-mode: both; }
+        .register-form .form-group:nth-child(3) { animation-delay: 0.8s; animation-fill-mode: both; }
+        .register-form .form-group:nth-child(4) { animation-delay: 0.9s; animation-fill-mode: both; }
+
+        .form-input {
+            border-radius: 12px;
+            border: 2px solid #E8F5E8;
+            background: rgba(248, 249, 250, 0.8);
+            transition: all 0.3s ease;
+        }
+
+        .form-input:focus {
+            background: white;
+            border-color: var(--primary-green);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 20px rgba(76, 175, 80, 0.15);
+        }
+
+        .btn-register {
+            width: 100%;
+            padding: 1rem;
+            font-size: 1.1rem;
+            font-weight: 600;
+            border-radius: 12px;
+            margin-top: 1rem;
+            background: linear-gradient(135deg, var(--primary-green) 0%, var(--primary-green-dark) 100%);
+            position: relative;
+            overflow: hidden;
+            animation: slideUp 0.6s ease-out 1s both;
+        }
+
+        .btn-register::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: all 0.6s;
+        }
+
+        .btn-register:hover::before {
+            left: 100%;
+        }
+
+        .divider {
+            text-align: center;
+            margin: 2rem 0;
+            position: relative;
+            color: var(--text-muted);
+            animation: fadeIn 0.6s ease-out 1.1s both;
+        }
+
+        .divider::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: #E0E0E0;
+            z-index: 1;
+        }
+
+        .divider span {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 0 1rem;
+            position: relative;
+            z-index: 2;
+        }
+
+        .login-link {
+            text-align: center;
+            animation: fadeIn 0.6s ease-out 1.2s both;
+        }
+
+        .login-link a {
+            color: var(--primary-green);
+            text-decoration: none;
+            font-weight: 500;
+            transition: var(--transition);
+        }
+
+        .login-link a:hover {
+            color: var(--primary-green-dark);
+            text-decoration: underline;
+        }
+
+        .form-floating {
+            position: relative;
+        }
+
+        .form-floating .form-input {
+            padding-top: 1.625rem;
+            padding-bottom: 0.625rem;
+        }
+
+        .form-floating .form-label {
+            position: absolute;
+            top: 0;
+            left: 1rem;
+            height: 100%;
+            padding: 1rem 0;
+            pointer-events: none;
+            border: none;
+            transform-origin: 0 0;
+            transition: opacity 0.1s ease-in-out, transform 0.1s ease-in-out;
+            color: var(--text-muted);
+        }
+
+        .form-floating .form-input:focus ~ .form-label,
+        .form-floating .form-input:not(:placeholder-shown) ~ .form-label {
+            opacity: 0.65;
+            transform: scale(0.85) translateY(-0.5rem) translateX(0.15rem);
+        }
+
+        /* Responsive design */
+        @media (max-width: 768px) {
+            .register-page {
+                padding: 1rem;
+            }
+
+            .register-card {
+                padding: 2rem;
+            }
+
+            .brand-title {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="register-page">
+        <div class="register-container">
+            <!-- Brand Header -->
+            <div class="brand-header">
+                <div class="brand-logo">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                    </svg>
+                </div>
+                <h1 class="brand-title">NutriMind</h1>
+                <p class="brand-subtitle">Your Personal Nutrition Assistant</p>
+            </div>
+
+            <!-- Register Card -->
+            <div class="card register-card">
+                <h2 class="text-center mb-3">Create Your Account</h2>
+                <p class="text-center text-muted mb-4">Start your journey to healthier eating</p>
+
+                <form class="register-form" onsubmit="handleRegister(event)">
+                    <div class="form-group">
+                        <div class="form-floating">
+                            <input type="text" id="fullName" class="form-input" placeholder="Full Name" required>
+                            <label for="fullName" class="form-label">Full Name</label>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <div class="form-floating">
+                            <input type="email" id="email" class="form-input" placeholder="Email Address" required>
+                            <label for="email" class="form-label">Email Address</label>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <div class="form-floating">
+                            <input type="password" id="password" class="form-input" placeholder="Password" required>
+                            <label for="password" class="form-label">Password</label>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <div class="form-floating">
+                            <input type="password" id="confirmPassword" class="form-input" placeholder="Confirm Password" required>
+                            <label for="confirmPassword" class="form-label">Confirm Password</label>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary btn-register">
+                        Create Account
+                    </button>
+                </form>
+
+                <div class="divider">
+                    <span>or</span>
+                </div>
+
+                <div class="login-link">
+                    <p>Already have an account? <a href="dashboard.html">Sign In</a></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Add floating label animation
+        document.addEventListener('DOMContentLoaded', function() {
+            const inputs = document.querySelectorAll('.form-floating .form-input');
+            
+            inputs.forEach(input => {
+                // Set initial state
+                if (input.value) {
+                    input.classList.add('has-value');
+                }
+                
+                // Handle input events
+                input.addEventListener('input', function() {
+                    if (this.value) {
+                        this.classList.add('has-value');
+                    } else {
+                        this.classList.remove('has-value');
+                    }
+                });
+                
+                // Add focus animations
+                input.addEventListener('focus', function() {
+                    this.parentElement.classList.add('focused');
+                });
+                
+                input.addEventListener('blur', function() {
+                    this.parentElement.classList.remove('focused');
+                });
+            });
+        });
+
+        function handleRegister(event) {
+            event.preventDefault();
+            
+            const fullName = document.getElementById('fullName').value;
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            
+            // Basic validation
+            if (password !== confirmPassword) {
+                alert('Passwords do not match!');
+                return;
+            }
+            
+            // Simulate registration process
+            const btn = event.target.querySelector('.btn-register');
+            btn.innerHTML = 'Creating Account...';
+            btn.disabled = true;
+            
+            setTimeout(() => {
+                // Simulate success
+                alert('Account created successfully! Redirecting to profile setup...');
+                window.location.href = 'profile.html';
+            }, 2000);
+        }
+
+        // Add some entrance animations on scroll
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.animationPlayState = 'running';
+                }
+            });
+        }, observerOptions);
+
+        // Observe elements for animation
+        document.addEventListener('DOMContentLoaded', function() {
+            const animatedElements = document.querySelectorAll('.slide-up, .fade-in, .scale-in');
+            animatedElements.forEach(el => {
+                el.style.animationPlayState = 'paused';
+                observer.observe(el);
+            });
+        });
+    </script>
+</body>
+</html>

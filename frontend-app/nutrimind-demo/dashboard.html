@@ -1,0 +1,2757 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - NutriMind</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/main.css">
+    <style>
+        .dashboard-page {
+            background: linear-gradient(135deg, #e8f5e8 0%, #f1f8e9 100%);
+            min-height: 100vh;
+        }
+
+        /* Header Styles */
+        .dashboard-header {
+            background: linear-gradient(135deg, var(--primary-green) 0%, var(--primary-green-dark) 100%);
+            color: white;
+            padding: 2rem 0;
+            box-shadow: var(--shadow-medium);
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 2rem;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 2rem;
+            flex: 1;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 2rem;
+        }
+
+        /* Profile Menu */
+        .profile-menu {
+            position: relative;
+        }
+
+        .profile-button {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            background: rgba(255, 255, 255, 0.15);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 50px;
+            padding: 0.75rem 1.25rem;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .profile-button:hover {
+            background: rgba(255, 255, 255, 0.25);
+            border-color: rgba(255, 255, 255, 0.3);
+            transform: translateY(-1px);
+        }
+
+        .profile-avatar {
+            width: 36px;
+            height: 36px;
+            background: linear-gradient(135deg, #ffffff 0%, rgba(255,255,255,0.9) 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .profile-avatar svg {
+            width: 20px;
+            height: 20px;
+            fill: var(--primary-green);
+        }
+
+        .profile-info {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .profile-name {
+            font-size: 0.95rem;
+            font-weight: 600;
+            margin: 0;
+            line-height: 1;
+        }
+
+        .profile-role {
+            font-size: 0.75rem;
+            opacity: 0.8;
+            margin: 0;
+            line-height: 1;
+            margin-top: 2px;
+        }
+
+        .profile-dropdown-icon {
+            width: 16px;
+            height: 16px;
+            transition: transform 0.3s ease;
+        }
+
+        .profile-button.active .profile-dropdown-icon {
+            transform: rotate(180deg);
+        }
+
+        .profile-dropdown {
+            position: absolute;
+            top: calc(100% + 0.5rem);
+            right: 0;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            min-width: 220px;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px);
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+
+        .profile-dropdown.show {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .dropdown-header {
+            padding: 1rem 1.25rem;
+            border-bottom: 1px solid #f0f0f0;
+            background: rgba(76, 175, 80, 0.05);
+            border-radius: 12px 12px 0 0;
+        }
+
+        .dropdown-user-name {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text-dark);
+            margin: 0 0 0.25rem 0;
+        }
+
+        .dropdown-user-email {
+            font-size: 0.8rem;
+            color: var(--text-light);
+            margin: 0;
+        }
+
+        .dropdown-menu {
+            padding: 0.5rem 0;
+        }
+
+        .dropdown-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem 1.25rem;
+            color: var(--text-dark);
+            text-decoration: none;
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+
+        .dropdown-item:hover {
+            background: rgba(76, 175, 80, 0.08);
+            color: var(--primary-green);
+        }
+
+        .dropdown-item svg {
+            width: 18px;
+            height: 18px;
+            fill: currentColor;
+        }
+
+        .dropdown-divider {
+            height: 1px;
+            background: #f0f0f0;
+            margin: 0.5rem 0;
+        }
+
+        .dropdown-item.logout {
+            color: #f44336;
+        }
+
+        .dropdown-item.logout:hover {
+            background: rgba(244, 67, 54, 0.08);
+            color: #f44336;
+        }
+
+        /* Logo Styles */
+        .header-logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .logo-icon {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, #ffffff 0%, rgba(255,255,255,0.9) 100%);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        .logo-icon::before {
+            content: '';
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background: var(--primary-green);
+            border-radius: 50%;
+            top: 8px;
+            left: 8px;
+            opacity: 0.8;
+        }
+
+        .logo-icon::after {
+            content: '';
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            background: var(--accent-orange);
+            border-radius: 50%;
+            top: 32px;
+            right: 10px;
+            animation: pulse 2s infinite;
+        }
+
+        .logo-text {
+            display: flex;
+            align-items: baseline;
+            gap: 0.5rem;
+        }
+
+        .logo-name {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin: 0;
+            letter-spacing: -0.5px;
+            background: linear-gradient(135deg, #ffffff 0%, rgba(255,255,255,0.8) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .logo-tagline {
+            font-size: 0.75rem;
+            font-weight: 500;
+            margin: 0;
+            opacity: 0.9;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 0.8;
+                transform: scale(1);
+            }
+            50% {
+                opacity: 1;
+                transform: scale(1.2);
+            }
+        }
+
+        .header-stats {
+            display: flex;
+            gap: 2rem;
+            text-align: center;
+        }
+
+        .stat-item {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 1rem 1.5rem;
+            border-radius: var(--border-radius);
+            backdrop-filter: blur(10px);
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            display: block;
+        }
+
+        .stat-label {
+            font-size: 0.85rem;
+            opacity: 0.9;
+        }
+
+        /* Week Navigation */
+        .week-navigation {
+            background: white;
+            padding: 1.5rem 0;
+            box-shadow: var(--shadow-light);
+            margin-bottom: 2rem;
+        }
+
+        .week-tabs {
+            display: flex;
+            gap: 1rem;
+            overflow-x: auto;
+            padding-bottom: 0.5rem;
+        }
+
+        .week-tab {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 1rem 1.5rem;
+            background: var(--background-light);
+            border: 2px solid transparent;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            transition: var(--transition);
+            min-width: 140px;
+            white-space: nowrap;
+        }
+
+        .week-tab.active {
+            background: var(--primary-green);
+            color: white;
+            border-color: var(--primary-green-dark);
+        }
+
+        .week-tab:hover:not(.active) {
+            background: rgba(76, 175, 80, 0.1);
+            border-color: var(--primary-green-light);
+        }
+
+        .week-date {
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .week-label {
+            font-size: 0.8rem;
+            opacity: 0.8;
+            margin-top: 0.25rem;
+        }
+
+        /* Meal Plan Grid */
+        .meal-plan-container {
+            padding: 2rem 0;
+        }
+
+        .weekly-overview {
+            background: white;
+            border-radius: var(--border-radius);
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: var(--shadow-light);
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 2rem;
+        }
+
+        .overview-stat {
+            text-align: center;
+            padding: 1rem;
+            background: var(--background-light);
+            border-radius: var(--border-radius-small);
+        }
+
+        .overview-stat-icon {
+            width: 48px;
+            height: 48px;
+            background: var(--primary-green);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1rem;
+        }
+
+        .overview-stat-icon svg {
+            width: 24px;
+            height: 24px;
+            fill: white;
+        }
+
+        .overview-stat-value {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--primary-green);
+            margin-bottom: 0.5rem;
+        }
+
+        .overview-stat-label {
+            color: var(--text-light);
+            font-size: 0.9rem;
+        }
+
+        .days-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .day-card {
+            background: white;
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            box-shadow: var(--shadow-light);
+            transition: var(--transition);
+            animation: fadeIn 0.6s ease-out;
+        }
+
+        .day-card:hover {
+            box-shadow: var(--shadow-medium);
+            transform: translateY(-2px);
+        }
+
+        .day-card:nth-child(1) { border-left: 4px solid #FF6B6B; }
+        .day-card:nth-child(2) { border-left: 4px solid #4ECDC4; }
+        .day-card:nth-child(3) { border-left: 4px solid #45B7D1; }
+        .day-card:nth-child(4) { border-left: 4px solid #96CEB4; }
+        .day-card:nth-child(5) { border-left: 4px solid #FFEAA7; }
+        .day-card:nth-child(6) { border-left: 4px solid #DDA0DD; }
+        .day-card:nth-child(7) { border-left: 4px solid #98D8C8; }
+
+        .day-header {
+            background: linear-gradient(135deg, var(--primary-green) 0%, var(--primary-green-light) 100%);
+            color: white;
+            padding: 1.2rem 1.5rem;
+            position: relative;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .day-header.today {
+            background: linear-gradient(135deg, var(--accent-orange) 0%, #FF7043 100%);
+        }
+
+        .day-info {
+            display: flex;
+            align-items: center;
+            gap: 2rem;
+        }
+
+        .day-name {
+            font-size: 1.4rem;
+            font-weight: 600;
+            margin: 0;
+        }
+
+        .day-date {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+
+        .day-nutrition {
+            display: flex;
+            gap: 2rem;
+            font-size: 0.85rem;
+        }
+
+        .nutrition-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+
+        .nutrition-value {
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+
+        .nutrition-label {
+            opacity: 0.8;
+            font-size: 0.8rem;
+        }
+
+        /* Horizontal Meals Layout */
+        .meals-container {
+            padding: 1.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1.2rem;
+            align-items: stretch;
+        }
+
+        .meal-item {
+            display: flex;
+            flex-direction: column;
+            background: var(--background-light);
+            border-radius: var(--border-radius-small);
+            padding: 1.2rem;
+            transition: var(--transition);
+            min-width: 280px;
+            flex: 1;
+            position: relative;
+            border: 2px solid transparent;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        .meal-item:hover {
+            background: rgba(76, 175, 80, 0.05);
+            border-color: var(--primary-green);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-light);
+        }
+
+        .meal-item.breakfast { 
+            background: linear-gradient(135deg, rgba(255, 152, 0, 0.1), rgba(255, 152, 0, 0.05));
+            border-left: 4px solid #FF9800; 
+        }
+        .meal-item.lunch { 
+            background: linear-gradient(135deg, rgba(33, 150, 243, 0.1), rgba(33, 150, 243, 0.05));
+            border-left: 4px solid #2196F3; 
+        }
+        .meal-item.dinner { 
+            background: linear-gradient(135deg, rgba(156, 39, 176, 0.1), rgba(156, 39, 176, 0.05));
+            border-left: 4px solid #9C27B0; 
+        }
+
+        .meal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 0.75rem;
+        }
+
+        .meal-icon-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .meal-icon {
+            width: 42px;
+            height: 42px;
+            background: var(--primary-green);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .meal-icon.breakfast { background: #FF9800; }
+        .meal-icon.lunch { background: #2196F3; }
+        .meal-icon.dinner { background: #9C27B0; }
+
+        .meal-icon svg {
+            width: 20px;
+            height: 20px;
+            fill: white;
+        }
+
+        .meal-type-label {
+            background: var(--primary-green);
+            color: white;
+            padding: 0.25rem 0.6rem;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            font-weight: 500;
+            text-transform: uppercase;
+        }
+
+        .meal-type-label.breakfast { background: #FF9800; }
+        .meal-type-label.lunch { background: #2196F3; }
+        .meal-type-label.dinner { background: #9C27B0; }
+
+        .meal-info {
+            flex: 1;
+        }
+
+        .meal-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            margin-bottom: 0.5rem;
+            color: var(--text-dark);
+            line-height: 1.3;
+        }
+
+        .meal-description {
+            font-size: 0.85rem;
+            color: var(--text-light);
+            margin-bottom: 1rem;
+            line-height: 1.4;
+        }
+
+        .meal-stats {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            font-size: 0.8rem;
+            margin-bottom: 1rem;
+        }
+
+        .meal-stat {
+            background: white;
+            padding: 0.4rem 0.6rem;
+            border-radius: 6px;
+            border: 1px solid #E0E0E0;
+            white-space: nowrap;
+        }
+
+        .difficulty-badge {
+            background: var(--primary-green);
+            color: white;
+            padding: 0.3rem 0.6rem;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            font-weight: 500;
+            text-transform: uppercase;
+        }
+
+        .difficulty-easy { background: #4CAF50; }
+        .difficulty-medium { background: #FF9800; }
+        .difficulty-hard { background: #F44336; }
+
+        .meal-actions {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: auto;
+            padding-top: 1rem;
+            border-top: 1px solid #E0E0E0;
+        }
+
+        .action-btn {
+            flex: 1;
+            background: var(--primary-green);
+            color: white;
+            border: none;
+            padding: 0.7rem 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: var(--transition);
+            font-size: 0.85rem;
+            font-weight: 500;
+            text-align: center;
+        }
+
+        .action-btn:hover {
+            background: var(--primary-green-dark);
+            transform: translateY(-1px);
+        }
+
+        .action-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .action-btn.view-recipe {
+            background: #2196F3;
+        }
+
+        .action-btn.view-recipe:hover {
+            background: #1976D2;
+        }
+
+        .action-btn.mark-cooked {
+            background: #4CAF50;
+        }
+
+        .action-btn.mark-cooked:hover {
+            background: #388E3C;
+        }
+
+        .empty-day {
+            text-align: center;
+            padding: 3rem 2rem;
+            color: var(--text-muted);
+            background: rgba(0, 0, 0, 0.02);
+            border-radius: var(--border-radius-small);
+            border: 2px dashed #ddd;
+            width: 100%;
+        }
+
+        .empty-day p {
+            margin-bottom: 1.5rem;
+            font-size: 1.1rem;
+        }
+
+        .meal-description {
+            font-size: 0.85rem;
+            color: var(--text-light);
+            margin-bottom: 0.5rem;
+        }
+
+        .meal-stats {
+            display: flex;
+            gap: 1rem;
+            font-size: 0.8rem;
+        }
+
+        .meal-stat {
+            background: white;
+            padding: 0.25rem 0.5rem;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+
+        .difficulty-badge {
+            background: var(--primary-green);
+            color: white;
+            padding: 0.25rem 0.5rem;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .difficulty-easy { background: #4CAF50; }
+        .difficulty-medium { background: #FF9800; }
+        .difficulty-hard { background: #F44336; }
+
+        .meal-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        /* .action-btn {
+            width: 36px;
+            height: 36px;
+            border: none;
+            background: rgba(76, 175, 80, 0.1);
+            color: var(--primary-green);
+            border-radius: 50%;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        } */
+
+        .action-btn:hover {
+            background: var(--primary-green);
+            color: white;
+            transform: scale(1.1);
+        }
+
+        .floating-action {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, var(--primary-green) 0%, var(--primary-green-dark) 100%);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            box-shadow: var(--shadow-heavy);
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .floating-action:hover {
+            transform: scale(1.1);
+            box-shadow: 0 8px 40px rgba(76, 175, 80, 0.3);
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(5px);
+            z-index: 2000;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: var(--border-radius);
+            max-width: 600px;
+            width: 90%;
+            max-height: 80%;
+            overflow-y: auto;
+            margin: 5% auto;
+            animation: scaleIn 0.3s ease;
+        }
+
+        .modal-header {
+            background: var(--primary-green);
+            color: white;
+            padding: 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: var(--transition);
+        }
+
+        .modal-close:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .modal-body {
+            padding: 2rem;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .header-content {
+                flex-direction: column;
+                gap: 1.5rem;
+                text-align: center;
+            }
+
+            .header-left {
+                flex-direction: column;
+                gap: 1rem;
+                align-items: center;
+                text-align: center;
+            }
+
+            .header-right {
+                flex-direction: column;
+                gap: 1rem;
+                width: 100%;
+            }
+
+            .header-logo {
+                gap: 0.75rem;
+            }
+
+            .logo-icon {
+                width: 40px;
+                height: 40px;
+            }
+
+            .logo-name {
+                font-size: 1.5rem;
+            }
+
+            .logo-tagline {
+                font-size: 0.7rem;
+                letter-spacing: 1.5px;
+            }
+
+            .header-stats {
+                justify-content: center;
+                flex-wrap: wrap;
+                gap: 1rem;
+            }
+
+            .profile-button {
+                justify-content: center;
+                margin: 0 auto;
+            }
+
+            .profile-dropdown {
+                right: auto;
+                left: 50%;
+                transform: translateX(-50%) translateY(-10px);
+            }
+
+            .profile-dropdown.show {
+                transform: translateX(-50%) translateY(0);
+            }
+
+            .weekly-overview {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .day-header {
+                flex-direction: column;
+                gap: 1rem;
+                text-align: center;
+            }
+
+            .day-info {
+                flex-direction: column;
+                gap: 0.5rem;
+                text-align: center;
+            }
+
+            .day-nutrition {
+                justify-content: center;
+            }
+
+            .meals-container {
+                flex-direction: column;
+            }
+
+            .meal-item {
+                min-width: unset;
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .meal-header {
+                justify-content: center;
+            }
+
+            .meal-actions {
+                flex-direction: row;
+                justify-content: center;
+                gap: 1rem;
+            }
+
+            .action-btn {
+                min-width: 100px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .weekly-overview {
+                grid-template-columns: 1fr;
+            }
+
+            .meal-stats {
+                justify-content: center;
+            }
+
+            .day-nutrition {
+                gap: 1rem;
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+
+            .nutrition-item {
+                min-width: 60px;
+            }
+
+            .week-tabs {
+                gap: 0.5rem;
+            }
+
+            .week-tab {
+                min-width: 100px;
+                padding: 0.75rem 1rem;
+            }
+
+            .meal-actions {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+
+            .header-left {
+                gap: 0.5rem;
+            }
+
+            .main-title {
+                font-size: 1.5rem;
+            }
+
+            .welcome-text {
+                font-size: 0.85rem;
+            }
+
+            .logo-name {
+                font-size: 1.2rem;
+            }
+
+            .logo-tagline {
+                font-size: 0.6rem;
+                letter-spacing: 1px;
+            }
+
+            .logo-icon {
+                width: 35px;
+                height: 35px;
+            }
+
+            .header-stats {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 0.75rem;
+                width: 100%;
+            }
+
+            .stat-item {
+                padding: 0.75rem 1rem;
+            }
+
+            .profile-info {
+                display: none;
+            }
+
+            .profile-button {
+                padding: 0.75rem;
+                border-radius: 50%;
+                min-width: auto;
+            }
+        }
+
+        /* Past Week Styling */
+        .day-card.past-week {
+            opacity: 0.6;
+            position: relative;
+        }
+
+        .day-card.past-week::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.1);
+            border-radius: var(--border-radius);
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .day-card.past-week .day-header {
+            background: #9E9E9E !important;
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .day-card.past-week .meal-item {
+            background: rgba(224, 224, 224, 0.5);
+            color: #666;
+        }
+
+        .day-card.past-week .meal-name {
+            color: #666 !important;
+        }
+
+        .day-card.past-week .meal-description {
+            color: #888 !important;
+        }
+
+        .day-card.past-week .meal-icon {
+            background: #9E9E9E !important;
+            opacity: 0.7;
+        }
+
+        .day-card.past-week .meal-actions {
+            opacity: 0.5;
+            pointer-events: none;
+        }
+
+        .day-card.past-week .difficulty-badge {
+            background: #BDBDBD !important;
+            color: white !important;
+        }
+
+        .past-week-indicator {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 0.25rem 0.5rem;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            font-weight: 500;
+            z-index: 2;
+        }
+
+        @keyframes fadeIn {
+            from { 
+                opacity: 0; 
+                transform: translateY(20px); 
+            }
+            to { 
+                opacity: 1; 
+                transform: translateY(0); 
+            }
+        }
+
+        @keyframes slideInRight {
+            from { 
+                opacity: 0; 
+                transform: translateX(100px); 
+            }
+            to { 
+                opacity: 1; 
+                transform: translateX(0); 
+            }
+        }
+
+        @keyframes scaleIn {
+            from { 
+                opacity: 0; 
+                transform: scale(0.9); 
+            }
+            to { 
+                opacity: 1; 
+                transform: scale(1); 
+            }
+        }
+
+        /* Healthy Tips Widget */
+        .healthy-tips-widget {
+            position: fixed;
+            top: 100px;
+            right: 20px;
+            width: 320px;
+            background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+            border-left: 4px solid var(--primary-green);
+            z-index: 1500;
+            transform: translateX(350px);
+            transition: all 0.4s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .healthy-tips-widget.show {
+            transform: translateX(0);
+        }
+
+        .tips-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+        }
+
+        .tips-icon-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .tips-icon {
+            width: 32px;
+            height: 32px;
+            background: var(--primary-green);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .tips-icon svg {
+            width: 16px;
+            height: 16px;
+            fill: white;
+        }
+
+        .tips-title {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text-dark);
+            margin: 0;
+        }
+
+        .tips-close {
+            background: none;
+            border: none;
+            color: var(--text-light);
+            cursor: pointer;
+            font-size: 1.2rem;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: var(--transition);
+        }
+
+        .tips-close:hover {
+            background: rgba(0, 0, 0, 0.1);
+        }
+
+        .tip-content {
+            color: var(--text-dark);
+            font-size: 0.9rem;
+            line-height: 1.5;
+            margin-bottom: 1rem;
+        }
+
+        .tip-category {
+            display: inline-block;
+            background: rgba(76, 175, 80, 0.1);
+            color: var(--primary-green);
+            padding: 0.25rem 0.6rem;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            text-transform: uppercase;
+            margin-bottom: 0.75rem;
+        }
+
+        .tips-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.8rem;
+            color: var(--text-light);
+        }
+
+        .tip-counter {
+            font-weight: 500;
+        }
+
+        .tips-controls {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .tip-nav-btn {
+            background: none;
+            border: 1px solid var(--primary-green);
+            color: var(--primary-green);
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: var(--transition);
+            font-size: 0.8rem;
+        }
+
+        .tip-nav-btn:hover {
+            background: var(--primary-green);
+            color: white;
+        }
+
+        .tip-nav-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .tip-nav-btn:disabled:hover {
+            background: none;
+            color: var(--primary-green);
+        }
+
+        /* Snackbar/Toast Notification System */
+        .snackbar-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 10000;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            pointer-events: none;
+        }
+
+        .snackbar {
+            background: linear-gradient(135deg, #333 0%, #555 100%);
+            color: white;
+            padding: 1rem 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+            transform: translateX(400px);
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            opacity: 0;
+            pointer-events: all;
+            min-width: 300px;
+            max-width: 400px;
+            position: relative;
+            backdrop-filter: blur(10px);
+        }
+
+        .snackbar.show {
+            transform: translateX(0);
+            opacity: 1;
+        }
+
+        .snackbar.success {
+            background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+            border-left: 4px solid #2e7d32;
+        }
+
+        .snackbar.error {
+            background: linear-gradient(135deg, #f44336 0%, #d32f2f 100%);
+            border-left: 4px solid #c62828;
+        }
+
+        .snackbar.warning {
+            background: linear-gradient(135deg, #FF9800 0%, #f57c00 100%);
+            border-left: 4px solid #ef6c00;
+        }
+
+        .snackbar.info {
+            background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);
+            border-left: 4px solid #1565C0;
+        }
+
+        .snackbar-content {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.75rem;
+        }
+
+        .snackbar-icon {
+            flex-shrink: 0;
+            width: 20px;
+            height: 20px;
+            margin-top: 2px;
+        }
+
+        .snackbar-message {
+            flex: 1;
+            line-height: 1.4;
+        }
+
+        .snackbar-title {
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+            font-size: 0.9rem;
+        }
+
+        .snackbar-text {
+            font-size: 0.85rem;
+            opacity: 0.9;
+        }
+
+        .snackbar-close {
+            position: absolute;
+            top: 0.5rem;
+            right: 0.5rem;
+            background: none;
+            border: none;
+            color: white;
+            cursor: pointer;
+            font-size: 1.2rem;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: var(--transition);
+            opacity: 0.7;
+        }
+
+        .snackbar-close:hover {
+            background: rgba(255, 255, 255, 0.1);
+            opacity: 1;
+        }
+
+        .snackbar-progress {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            height: 3px;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 0 0 8px 8px;
+            animation: snackbar-progress 5s linear;
+        }
+
+        @keyframes snackbar-progress {
+            from { width: 100%; }
+            to { width: 0%; }
+        }
+
+        .snackbar-actions {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 0.75rem;
+            padding-top: 0.75rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .snackbar-btn {
+            background: rgba(255, 255, 255, 0.15);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 0.4rem 0.8rem;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .snackbar-btn:hover {
+            background: rgba(255, 255, 255, 0.25);
+        }
+
+        .snackbar-btn.primary {
+            background: rgba(255, 255, 255, 0.9);
+            color: #333;
+        }
+
+        .snackbar-btn.primary:hover {
+            background: white;
+        }
+
+        @media (max-width: 768px) {
+            .snackbar-container {
+                left: 10px;
+                right: 10px;
+                top: 10px;
+            }
+
+            .snackbar {
+                min-width: unset;
+                max-width: unset;
+                transform: translateY(-100px);
+            }
+
+            .snackbar.show {
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes slideInFromRight {
+            from {
+                opacity: 0;
+                transform: translateX(50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .tip-content {
+            animation: slideInFromRight 0.5s ease;
+        }
+
+        /* Mobile responsiveness */
+        @media (max-width: 768px) {
+            .healthy-tips-widget {
+                width: 280px;
+                right: 10px;
+                top: 80px;
+                padding: 1rem;
+            }
+
+            .healthy-tips-widget.show {
+                transform: translateX(0);
+            }
+
+            .healthy-tips-widget {
+                transform: translateX(300px);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-page">
+        <!-- Header -->
+        <header class="dashboard-header">
+            <div class="container">
+                <div class="header-content">
+                    <div class="header-left">
+                        <div class="header-logo">
+                            <div class="logo-icon">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                                    <path d="M12 2L15.5 8.5L22 9L17 14L18.5 21L12 17.5L5.5 21L7 14L2 9L8.5 8.5L12 2Z" fill="#4CAF50" stroke="#4CAF50" stroke-width="1"/>
+                                    <circle cx="16" cy="6" r="2" fill="#FF9800"/>
+                                    <path d="M8 16C8 16 10 18 12 16C14 18 16 16 16 16" stroke="#4CAF50" stroke-width="1.5" stroke-linecap="round"/>
+                                </svg>
+                            </div>
+                            <div class="logo-text">
+                                <h1 class="logo-name">Nutrimind AI</h1>
+                                <!-- <span class="logo-tagline">Smart Nutrition</span> -->
+                            </div>
+                        </div>
+                    </div>
+                    <div class="header-right">
+                        <div class="header-stats">
+                            <div class="stat-item">
+                                <span class="stat-value">7</span>
+                                <span class="stat-label">Days Planned</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-value">$75</span>
+                                <span class="stat-label">Weekly Budget</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-value">2,150</span>
+                                <span class="stat-label">Daily Calories</span>
+                            </div>
+                            <a href="purchase-list.html" class="stat-item" style="text-decoration: none; color: inherit; cursor: pointer;">
+                                <span class="stat-value" id="buyListCount">0</span>
+                                <span class="stat-label">Shopping List</span>
+                            </a>
+                        </div>
+                        
+                        <!-- Profile Menu -->
+                        <div class="profile-menu">
+                            <div class="profile-button" onclick="toggleProfileDropdown()">
+                                <div class="profile-avatar">
+                                    <svg viewBox="0 0 24 24">
+                                        <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+                                    </svg>
+                                </div>
+                                <div class="profile-info">
+                                    <div class="profile-name">Sarah</div>
+                                    <div class="profile-role">Premium User</div>
+                                </div>
+                                <svg class="profile-dropdown-icon" viewBox="0 0 24 24" fill="white">
+                                    <path d="M7 10l5 5 5-5z"/>
+                                </svg>
+                            </div>
+                            
+                            <div class="profile-dropdown" id="profileDropdown">
+                                <div class="dropdown-header">
+                                    <div class="dropdown-user-name">Sarah Johnson</div>
+                                    <div class="dropdown-user-email">sarah.johnson@email.com</div>
+                                </div>
+                                <div class="dropdown-menu">
+                                    <a href="profile.html" class="dropdown-item">
+                                        <svg viewBox="0 0 24 24">
+                                            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/>
+                                        </svg>
+                                        Edit Profile
+                                    </a>
+                                    <a href="#" class="dropdown-item" onclick="showSettings()">
+                                        <svg viewBox="0 0 24 24">
+                                            <path d="M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94c0-0.32-0.02-0.64-0.07-0.94l2.03-1.58c0.18-0.14,0.23-0.41,0.12-0.61 l-1.92-3.32c-0.12-0.22-0.37-0.29-0.59-0.22l-2.39,0.96c-0.5-0.38-1.03-0.7-1.62-0.94L14.4,2.81c-0.04-0.24-0.24-0.41-0.48-0.41 h-3.84c-0.24,0-0.43,0.17-0.47,0.41L9.25,5.35C8.66,5.59,8.12,5.92,7.63,6.29L5.24,5.33c-0.22-0.08-0.47,0-0.59,0.22L2.74,8.87 C2.62,9.08,2.66,9.34,2.86,9.48l2.03,1.58C4.84,11.36,4.8,11.69,4.8,12s0.02,0.64,0.07,0.94l-2.03,1.58 c-0.18,0.14-0.23,0.41-0.12,0.61l1.92,3.32c0.12,0.22,0.37,0.29,0.59,0.22l2.39-0.96c0.5,0.38,1.03,0.7,1.62,0.94l0.36,2.54 c0.05,0.24,0.24,0.41,0.48,0.41h3.84c0.24,0,0.44-0.17,0.47-0.41l0.36-2.54c0.59-0.24,1.13-0.56,1.62-0.94l2.39,0.96 c0.22,0.08,0.47,0,0.59-0.22l1.92-3.32c0.12-0.22,0.07-0.47-0.12-0.61L19.14,12.94z M12,15.6c-1.98,0-3.6-1.62-3.6-3.6 s1.62-3.6,3.6-3.6s3.6,1.62,3.6,3.6S13.98,15.6,12,15.6z"/>
+                                        </svg>
+                                        Settings
+                                    </a>
+                                    <a href="#" class="dropdown-item" onclick="showNutritionGoals()">
+                                        <svg viewBox="0 0 24 24">
+                                            <path d="M9,11H7V9A5,5 0 0,1 12,4A5,5 0 0,1 17,9V11H15V9A3,3 0 0,0 12,6A3,3 0 0,0 9,9M21,16V18A2,2 0 0,1 19,20H5A2,2 0 0,1 3,18V16A2,2 0 0,1 5,14H19A2,2 0 0,1 21,16Z"/>
+                                        </svg>
+                                        Nutrition Goals
+                                    </a>
+                                    <div class="dropdown-divider"></div>
+                                    <a href="#" class="dropdown-item" onclick="showHelp()">
+                                        <svg viewBox="0 0 24 24">
+                                            <path d="M11,18H13V16H11V18M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M12,20C7.59,20 4,16.41 4,12C4,7.59 7.59,4 12,4C16.41,4 20,7.59 20,12C20,16.41 16.41,20 12,20M12,6A4,4 0 0,0 8,10H10A2,2 0 0,1 12,8A2,2 0 0,1 14,10C14,12 11,11.75 11,15H13C13,12.75 16,12.5 16,10A4,4 0 0,0 12,6Z"/>
+                                        </svg>
+                                        Help & Support
+                                    </a>
+                                    <a href="login.html" class="dropdown-item logout" onclick="logout()">
+                                        <svg viewBox="0 0 24 24">
+                                            <path d="M16,17V14H9V10H16V7L21,12L16,17M14,2A2,2 0 0,1 16,4V6H14V4H5V20H14V18H16V20A2,2 0 0,1 14,22H5A2,2 0 0,1 3,20V4A2,2 0 0,1 5,2H14Z"/>
+                                        </svg>
+                                        Sign Out
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Week Navigation -->
+        <nav class="week-navigation">
+            <div class="container">
+                <div class="week-tabs" id="weekTabs">
+                    <!-- Week tabs will be populated by JavaScript -->
+                </div>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="meal-plan-container">
+            <div class="container">
+                <!-- Weekly Overview -->
+                <div class="weekly-overview">
+                    <div class="overview-stat">
+                        <div class="overview-stat-icon">
+                            <svg viewBox="0 0 24 24">
+                                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                            </svg>
+                        </div>
+                        <div class="overview-stat-value">$72.50</div>
+                        <div class="overview-stat-label">Total Cost</div>
+                    </div>
+                    <div class="overview-stat">
+                        <div class="overview-stat-icon">
+                            <svg viewBox="0 0 24 24">
+                                <path d="M13.5.67s.74 2.65.74 4.8c0 2.06-1.35 3.73-3.41 3.73-2.07 0-3.63-1.67-3.63-3.73l.03-.36C5.21 7.51 4 10.62 4 14c0 4.42 3.58 8 8 8s8-3.58 8-8C20 8.61 17.41 3.8 13.5.67zM11.71 19c-1.78 0-3.22-1.4-3.22-3.14 0-1.62 1.05-2.76 2.81-3.12 1.77-.36 3.6-1.21 4.62-2.58.39 1.29.59 2.65.59 4.04 0 2.65-2.15 4.8-4.8 4.8z"/>
+                            </svg>
+                        </div>
+                        <div class="overview-stat-value">2,145</div>
+                        <div class="overview-stat-label">Avg Calories</div>
+                    </div>
+                    <div class="overview-stat">
+                        <div class="overview-stat-icon">
+                            <svg viewBox="0 0 24 24">
+                                <path d="M20.57 14.86L22 13.43 20.57 12 17 15.57 8.43 7 12 3.43 10.57 2 9.14 3.43 7.71 2 5.57 4.14 4.14 2.71 2.71 4.14l1.43 1.43L2 7.71l1.43 1.43L4.86 7.7l8.58 8.58L12 17.71l1.43 1.43 1.43-1.43L16.29 19l1.43-1.43L16.29 16.14l4.28-1.28z"/>
+                            </svg>
+                        </div>
+                        <div class="overview-stat-value">128g</div>
+                        <div class="overview-stat-label">Daily Protein</div>
+                    </div>
+                    <div class="overview-stat">
+                        <div class="overview-stat-icon">
+                            <svg viewBox="0 0 24 24">
+                                <path d="M9 11H7v6h2v-6zm4 0h-2v6h2v-6zm4 0h-2v6h2v-6zm2.5-9H19V1h-1.5v1H6.5V1H5v1H3.5C2.67 2 2 2.67 2 3.5v1C2 5.33 2.67 6 3.5 6H5v13c0 1.1.9 2 2 2h10c1.1 0 2-.9 2-2V6h1.5C21.33 6 22 5.33 22 4.5v-1C22 2.67 21.33 2 20.5 2z"/>
+                            </svg>
+                        </div>
+                        <div class="overview-stat-value">21</div>
+                        <div class="overview-stat-label">Recipes</div>
+                    </div>
+                </div>
+
+                <!-- Days Grid -->
+                <div class="days-grid" id="daysGrid">
+                    <!-- Days will be populated by JavaScript -->
+                </div>
+            </div>
+        </main>
+
+        <!-- Floating Action Button -->
+        <button class="floating-action" onclick="generateNewPlan()">
+            <svg width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
+            </svg>
+        </button>
+
+        <!-- Healthy Tips Widget -->
+        <div class="healthy-tips-widget" id="tipsWidget">
+            <div class="tips-header">
+                <div class="tips-icon-wrapper">
+                    <div class="tips-icon">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                        </svg>
+                    </div>
+                    <h4 class="tips-title">Health Tip</h4>
+                </div>
+                <button class="tips-close" onclick="closeTipsWidget()">&times;</button>
+            </div>
+            <div class="tip-category" id="tipCategory">Nutrition</div>
+            <div class="tip-content" id="tipContent">
+                Stay hydrated! Drink at least 8 glasses of water daily to support your metabolism and maintain energy levels throughout the day.
+            </div>
+            <div class="tips-footer">
+                <span class="tip-counter" id="tipCounter">1 / 15</span>
+                <div class="tips-controls">
+                    <button class="tip-nav-btn" id="prevTip" onclick="previousTip()">&larr;</button>
+                    <button class="tip-nav-btn" id="nextTip" onclick="nextTip()">&rarr;</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recipe Modal -->
+        <div class="modal" id="recipeModal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 id="modalTitle">Recipe Details</h3>
+                    <button class="modal-close" onclick="closeModal()">&times;</button>
+                </div>
+                <div class="modal-body" id="modalBody">
+                    <!-- Recipe content will be populated by JavaScript -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Snackbar Container -->
+        <div class="snackbar-container" id="snackbarContainer"></div>
+    </div>
+
+    <script>
+        // Snackbar/Toast Notification System
+        function showSnackbar(message, type = 'info', duration = 5000, actions = null) {
+            const container = document.getElementById('snackbarContainer');
+            const snackbarId = 'snackbar_' + Date.now();
+            
+            const icons = {
+                success: '<path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>',
+                error: '<path d="M12 2C6.47 2 2 6.47 2 12s4.47 10 10 10 10-4.47 10-10S17.53 2 12 2zm5 13.59L15.59 17 12 13.41 8.41 17 7 15.59 10.59 12 7 8.41 8.41 7 12 10.59 15.59 7 17 8.41 13.41 12 17 15.59z"/>',
+                warning: '<path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/>',
+                info: '<path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/>'
+            };
+
+            let messageHtml = message;
+            let titleHtml = '';
+            
+            // If message contains a title (separated by \n\n), split it
+            if (message.includes('\n\n')) {
+                const parts = message.split('\n\n');
+                titleHtml = `<div class="snackbar-title">${parts[0]}</div>`;
+                messageHtml = parts.slice(1).join('\n\n').replace(/\n/g, '<br>');
+            } else {
+                messageHtml = message.replace(/\n/g, '<br>');
+            }
+
+            const snackbar = document.createElement('div');
+            snackbar.id = snackbarId;
+            snackbar.className = `snackbar ${type}`;
+            snackbar.innerHTML = `
+                <div class="snackbar-content">
+                    <svg class="snackbar-icon" viewBox="0 0 24 24" fill="white">
+                        ${icons[type]}
+                    </svg>
+                    <div class="snackbar-message">
+                        ${titleHtml}
+                        <div class="snackbar-text">${messageHtml}</div>
+                    </div>
+                </div>
+                <button class="snackbar-close" onclick="hideSnackbar('${snackbarId}')">&times;</button>
+                ${duration > 0 ? '<div class="snackbar-progress"></div>' : ''}
+                ${actions ? `<div class="snackbar-actions">${actions}</div>` : ''}
+            `;
+
+            container.appendChild(snackbar);
+
+            // Trigger animation
+            setTimeout(() => {
+                snackbar.classList.add('show');
+            }, 10);
+
+            // Auto-hide after duration
+            if (duration > 0) {
+                setTimeout(() => {
+                    hideSnackbar(snackbarId);
+                }, duration);
+            }
+
+            return snackbarId;
+        }
+
+        function hideSnackbar(snackbarId) {
+            const snackbar = document.getElementById(snackbarId);
+            if (snackbar) {
+                snackbar.classList.remove('show');
+                setTimeout(() => {
+                    if (snackbar.parentNode) {
+                        snackbar.parentNode.removeChild(snackbar);
+                    }
+                }, 400);
+            }
+        }
+
+        function showConfirmSnackbar(message, onConfirm, onCancel = null) {
+            const confirmId = Date.now();
+            const actions = `
+                <button class="snackbar-btn primary" onclick="confirmAction(${confirmId}, true)">Confirm</button>
+                <button class="snackbar-btn" onclick="confirmAction(${confirmId}, false)">Cancel</button>
+            `;
+            
+            const snackbarId = showSnackbar(message, 'warning', 0, actions);
+            
+            // Store callbacks globally
+            window[`confirmCallback_${confirmId}`] = onConfirm;
+            if (onCancel) {
+                window[`cancelCallback_${confirmId}`] = onCancel;
+            }
+            window[`confirmSnackbar_${confirmId}`] = snackbarId;
+        }
+
+        function confirmAction(confirmId, isConfirmed) {
+            const snackbarId = window[`confirmSnackbar_${confirmId}`];
+            hideSnackbar(snackbarId);
+            
+            if (isConfirmed && window[`confirmCallback_${confirmId}`]) {
+                window[`confirmCallback_${confirmId}`]();
+            } else if (!isConfirmed && window[`cancelCallback_${confirmId}`]) {
+                window[`cancelCallback_${confirmId}`]();
+            }
+            
+            // Cleanup
+            delete window[`confirmCallback_${confirmId}`];
+            delete window[`cancelCallback_${confirmId}`];
+            delete window[`confirmSnackbar_${confirmId}`];
+        }
+
+        // Sample meal data
+        const mealData = {
+            monday: [
+                {
+                    type: 'breakfast',
+                    name: 'Avocado Toast with Eggs',
+                    description: 'Sourdough toast topped with mashed avocado and poached eggs',
+                    calories: 420,
+                    protein: 18,
+                    cost: 4.50,
+                    difficulty: 'easy',
+                    time: 15,
+                    ingredients: ['2 slices sourdough bread', '1 avocado', '2 eggs', 'Salt', 'Pepper', 'Lemon juice'],
+                    instructions: ['Toast bread', 'Mash avocado with salt, pepper and lemon', 'Poach eggs', 'Assemble and serve']
+                },
+                {
+                    type: 'lunch',
+                    name: 'Mediterranean Quinoa Bowl',
+                    description: 'Quinoa with roasted vegetables, feta cheese, and tahini dressing',
+                    calories: 520,
+                    protein: 22,
+                    cost: 8.75,
+                    difficulty: 'medium',
+                    time: 35,
+                    ingredients: ['1 cup quinoa', 'Mixed vegetables', 'Feta cheese', 'Tahini', 'Olive oil'],
+                    instructions: ['Cook quinoa', 'Roast vegetables', 'Make tahini dressing', 'Combine and serve']
+                },
+                {
+                    type: 'dinner',
+                    name: 'Grilled Salmon with Asparagus',
+                    description: 'Fresh salmon fillet with roasted asparagus and lemon',
+                    calories: 450,
+                    protein: 35,
+                    cost: 12.00,
+                    difficulty: 'medium',
+                    time: 25,
+                    ingredients: ['Salmon fillet', 'Asparagus', 'Lemon', 'Olive oil', 'Herbs'],
+                    instructions: ['Season salmon', 'Grill salmon 4-5 min per side', 'Roast asparagus', 'Serve with lemon']
+                }
+            ],
+            tuesday: [
+                {
+                    type: 'breakfast',
+                    name: 'Greek Yogurt Parfait',
+                    description: 'Layers of Greek yogurt, berries, and granola',
+                    calories: 380,
+                    protein: 20,
+                    cost: 3.25,
+                    difficulty: 'easy',
+                    time: 5,
+                    ingredients: ['Greek yogurt', 'Mixed berries', 'Granola', 'Honey'],
+                    instructions: ['Layer yogurt and berries', 'Top with granola', 'Drizzle with honey']
+                },
+                {
+                    type: 'lunch',
+                    name: 'Chicken Caesar Wrap',
+                    description: 'Grilled chicken with romaine, parmesan, and caesar dressing',
+                    calories: 480,
+                    protein: 32,
+                    cost: 6.50,
+                    difficulty: 'easy',
+                    time: 20,
+                    ingredients: ['Chicken breast', 'Tortilla wrap', 'Romaine lettuce', 'Parmesan', 'Caesar dressing'],
+                    instructions: ['Grill chicken', 'Assemble wrap with ingredients', 'Roll tightly and serve']
+                },
+                {
+                    type: 'dinner',
+                    name: 'Vegetable Stir Fry',
+                    description: 'Mixed vegetables stir-fried with tofu and ginger-soy sauce',
+                    calories: 420,
+                    protein: 16,
+                    cost: 7.25,
+                    difficulty: 'easy',
+                    time: 15,
+                    ingredients: ['Mixed vegetables', 'Tofu', 'Ginger', 'Soy sauce', 'Sesame oil'],
+                    instructions: ['Prep vegetables', 'Stir fry tofu', 'Add vegetables and sauce', 'Serve over rice']
+                }
+            ],
+            // Add more days...
+            wednesday: [
+                {
+                    type: 'breakfast',
+                    name: 'Overnight Oats',
+                    description: 'Rolled oats with banana, chia seeds, and almond milk',
+                    calories: 340,
+                    protein: 12,
+                    cost: 2.75,
+                    difficulty: 'easy',
+                    time: 5,
+                    ingredients: ['Rolled oats', 'Banana', 'Chia seeds', 'Almond milk', 'Maple syrup'],
+                    instructions: ['Mix all ingredients', 'Refrigerate overnight', 'Serve cold']
+                },
+                {
+                    type: 'lunch',
+                    name: 'Turkey and Hummus Wrap',
+                    description: 'Sliced turkey with hummus, vegetables in spinach wrap',
+                    calories: 460,
+                    protein: 25,
+                    cost: 5.50,
+                    difficulty: 'easy',
+                    time: 10,
+                    ingredients: ['Turkey slices', 'Spinach wrap', 'Hummus', 'Cucumber', 'Tomato'],
+                    instructions: ['Spread hummus on wrap', 'Add turkey and vegetables', 'Roll and slice']
+                },
+                {
+                    type: 'dinner',
+                    name: 'Beef and Broccoli',
+                    description: 'Tender beef strips with steamed broccoli in savory sauce',
+                    calories: 520,
+                    protein: 38,
+                    cost: 11.00,
+                    difficulty: 'medium',
+                    time: 30,
+                    ingredients: ['Beef strips', 'Broccoli', 'Soy sauce', 'Garlic', 'Ginger'],
+                    instructions: ['Marinate beef', 'Stir fry beef', 'Steam broccoli', 'Combine with sauce']
+                }
+            ],
+            thursday: [
+                {
+                    type: 'breakfast',
+                    name: 'Masala Chai & Upma',
+                    description: 'Traditional South Indian semolina breakfast with spiced tea',
+                    calories: 350,
+                    protein: 8,
+                    cost: 2.50,
+                    difficulty: 'medium',
+                    time: 20,
+                    ingredients: ['Semolina', 'Vegetables', 'Mustard seeds', 'Curry leaves', 'Ginger', 'Tea blend'],
+                    instructions: ['Roast semolina', 'Sauté spices and vegetables', 'Add water and semolina', 'Serve with masala chai']
+                },
+                {
+                    type: 'lunch',
+                    name: 'Chicken Tikka Masala',
+                    description: 'Tender chicken in creamy tomato curry with basmati rice',
+                    calories: 620,
+                    protein: 42,
+                    cost: 9.25,
+                    difficulty: 'medium',
+                    time: 45,
+                    ingredients: ['Chicken breast', 'Yogurt', 'Tomatoes', 'Cream', 'Garam masala', 'Basmati rice'],
+                    instructions: ['Marinate chicken', 'Cook chicken tikka', 'Prepare masala gravy', 'Combine and serve with rice']
+                },
+                {
+                    type: 'dinner',
+                    name: 'Dal Tadka & Roti',
+                    description: 'Yellow lentils with tempering spices and whole wheat flatbread',
+                    calories: 380,
+                    protein: 18,
+                    cost: 3.75,
+                    difficulty: 'easy',
+                    time: 30,
+                    ingredients: ['Yellow lentils', 'Onions', 'Tomatoes', 'Cumin', 'Whole wheat flour'],
+                    instructions: ['Boil lentils', 'Prepare tadka', 'Make roti dough', 'Cook rotis and serve']
+                }
+            ],
+            friday: [
+                {
+                    type: 'breakfast',
+                    name: 'Smoothie Bowl',
+                    description: 'Tropical smoothie bowl with mango, coconut, and granola',
+                    calories: 390,
+                    protein: 15,
+                    cost: 4.25,
+                    difficulty: 'easy',
+                    time: 10,
+                    ingredients: ['Frozen mango', 'Banana', 'Coconut milk', 'Granola', 'Chia seeds'],
+                    instructions: ['Blend frozen fruits', 'Pour into bowl', 'Add toppings', 'Serve immediately']
+                },
+                {
+                    type: 'lunch',
+                    name: 'Paneer Butter Masala',
+                    description: 'Creamy cottage cheese curry with naan bread',
+                    calories: 580,
+                    protein: 28,
+                    cost: 8.50,
+                    difficulty: 'medium',
+                    time: 35,
+                    ingredients: ['Paneer', 'Butter', 'Tomatoes', 'Cream', 'Cashews', 'Naan bread'],
+                    instructions: ['Fry paneer cubes', 'Make tomato-cashew gravy', 'Add cream and spices', 'Serve with warm naan']
+                },
+                {
+                    type: 'dinner',
+                    name: 'Fish Tacos',
+                    description: 'Grilled fish with cabbage slaw and avocado lime crema',
+                    calories: 480,
+                    protein: 32,
+                    cost: 10.75,
+                    difficulty: 'medium',
+                    time: 25,
+                    ingredients: ['White fish', 'Corn tortillas', 'Cabbage', 'Avocado', 'Lime', 'Cilantro'],
+                    instructions: ['Season and grill fish', 'Make slaw and crema', 'Warm tortillas', 'Assemble tacos']
+                }
+            ],
+            saturday: [
+                {
+                    type: 'breakfast',
+                    name: 'Aloo Paratha & Yogurt',
+                    description: 'Stuffed potato flatbread with fresh yogurt and pickle',
+                    calories: 450,
+                    protein: 12,
+                    cost: 3.00,
+                    difficulty: 'medium',
+                    time: 30,
+                    ingredients: ['Wheat flour', 'Potatoes', 'Onions', 'Spices', 'Yogurt', 'Pickle'],
+                    instructions: ['Make dough', 'Prepare potato filling', 'Roll and stuff parathas', 'Cook on griddle with ghee']
+                },
+                {
+                    type: 'lunch',
+                    name: 'Biryani with Raita',
+                    description: 'Fragrant basmati rice with marinated chicken and cooling yogurt',
+                    calories: 680,
+                    protein: 38,
+                    cost: 11.50,
+                    difficulty: 'hard',
+                    time: 60,
+                    ingredients: ['Basmati rice', 'Chicken', 'Saffron', 'Fried onions', 'Yogurt', 'Biryani spices'],
+                    instructions: ['Marinate chicken', 'Partially cook rice', 'Layer chicken and rice', 'Dum cook for 45 mins']
+                },
+                {
+                    type: 'dinner',
+                    name: 'Rajma Chawal',
+                    description: 'Red kidney beans curry with steamed rice',
+                    calories: 420,
+                    protein: 16,
+                    cost: 4.25,
+                    difficulty: 'easy',
+                    time: 40,
+                    ingredients: ['Red kidney beans', 'Onions', 'Tomatoes', 'Ginger-garlic', 'Basmati rice'],
+                    instructions: ['Soak and cook rajma', 'Make onion-tomato base', 'Add spices and simmer', 'Serve with rice']
+                }
+            ],
+            sunday: [
+                {
+                    type: 'breakfast',
+                    name: 'Dosa with Sambar',
+                    description: 'Crispy crepe with lentil soup and coconut chutney',
+                    calories: 380,
+                    protein: 14,
+                    cost: 3.50,
+                    difficulty: 'medium',
+                    time: 25,
+                    ingredients: ['Dosa batter', 'Lentils', 'Vegetables', 'Tamarind', 'Coconut', 'Curry leaves'],
+                    instructions: ['Prepare sambar', 'Make coconut chutney', 'Spread dosa batter', 'Cook until crispy']
+                },
+                {
+                    type: 'lunch',
+                    name: 'Butter Chicken',
+                    description: 'Creamy tomato-based chicken curry with garlic naan',
+                    calories: 640,
+                    protein: 40,
+                    cost: 10.25,
+                    difficulty: 'medium',
+                    time: 50,
+                    ingredients: ['Chicken', 'Butter', 'Tomatoes', 'Cream', 'Fenugreek leaves', 'Garlic naan'],
+                    instructions: ['Marinate chicken in yogurt', 'Cook in tandoor style', 'Make rich tomato gravy', 'Finish with cream and butter']
+                },
+                {
+                    type: 'dinner',
+                    name: 'Chole Bhature',
+                    description: 'Spicy chickpea curry with deep-fried bread',
+                    calories: 580,
+                    protein: 22,
+                    cost: 5.75,
+                    difficulty: 'medium',
+                    time: 45,
+                    ingredients: ['Chickpeas', 'Onions', 'Tomatoes', 'All-purpose flour', 'Yogurt', 'Spices'],
+                    instructions: ['Soak and cook chickpeas', 'Make spicy gravy', 'Prepare bhature dough', 'Deep fry bhature and serve']
+                }
+            ]
+        };
+
+        const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+        const dayNames = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+        
+        // Function to get Monday of current week
+        function getMondayOfWeek(date) {
+            const d = new Date(date);
+            const day = d.getDay();
+            const diff = d.getDate() - day + (day === 0 ? -6 : 1); // Adjust when day is Sunday
+            return new Date(d.setDate(diff));
+        }
+        
+        // Function to format date as "MMM DD"
+        function formatDateShort(date) {
+            return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        }
+        
+        // Function to get week dates array
+        function getWeekDates(mondayDate) {
+            const dates = [];
+            for (let i = 0; i < 7; i++) {
+                const date = new Date(mondayDate);
+                date.setDate(mondayDate.getDate() + i);
+                dates.push(formatDateShort(date));
+            }
+            return dates;
+        }
+        
+        // Function to get week range string (Mon DD - Sun DD)
+        function getWeekRange(mondayDate) {
+            const sunday = new Date(mondayDate);
+            sunday.setDate(mondayDate.getDate() + 6);
+            return `${formatDateShort(mondayDate)} - ${formatDateShort(sunday)}`;
+        }
+        
+        // Calculate real week dates
+        const today = new Date();
+        const currentMonday = getMondayOfWeek(today);
+        
+        // Generate dynamic week data
+        function generateWeekData() {
+            const weeks = {};
+            
+            for (let weekOffset = -1; weekOffset <= 2; weekOffset++) {
+                const weekMonday = new Date(currentMonday);
+                weekMonday.setDate(currentMonday.getDate() + (weekOffset * 7));
+                
+                weeks[weekOffset + 1] = {
+                    dates: getWeekDates(weekMonday),
+                    range: getWeekRange(weekMonday),
+                    meals: weekOffset === 0 ? mealData : (weekOffset === -1 ? {
+                        // Past week with some sample data
+                        monday: [
+                            {
+                                type: 'breakfast',
+                                name: 'Scrambled Eggs & Toast',
+                                description: 'Classic breakfast with buttered toast',
+                                calories: 320,
+                                protein: 18,
+                                cost: 3.50,
+                                difficulty: 'easy',
+                                time: 10,
+                                ingredients: ['Eggs', 'Bread', 'Butter', 'Salt', 'Pepper'],
+                                instructions: ['Beat eggs', 'Scramble in pan', 'Toast bread', 'Serve together']
+                            },
+                            {
+                                type: 'lunch',
+                                name: 'Caesar Salad',
+                                description: 'Fresh romaine with caesar dressing and croutons',
+                                calories: 450,
+                                protein: 15,
+                                cost: 7.25,
+                                difficulty: 'easy',
+                                time: 15,
+                                ingredients: ['Romaine lettuce', 'Caesar dressing', 'Croutons', 'Parmesan'],
+                                instructions: ['Chop lettuce', 'Add dressing', 'Top with croutons', 'Sprinkle cheese']
+                            }
+                        ],
+                        tuesday: [
+                            {
+                                type: 'breakfast',
+                                name: 'Oatmeal with Berries',
+                                description: 'Creamy oats topped with fresh mixed berries',
+                                calories: 280,
+                                protein: 8,
+                                cost: 2.75,
+                                difficulty: 'easy',
+                                time: 8,
+                                ingredients: ['Oats', 'Milk', 'Mixed berries', 'Honey'],
+                                instructions: ['Cook oats', 'Add milk', 'Top with berries', 'Drizzle honey']
+                            }
+                        ],
+                        wednesday: [
+                            {
+                                type: 'lunch',
+                                name: 'Grilled Cheese',
+                                description: 'Classic comfort food with tomato soup',
+                                calories: 520,
+                                protein: 20,
+                                cost: 4.50,
+                                difficulty: 'easy',
+                                time: 12,
+                                ingredients: ['Bread', 'Cheese', 'Butter', 'Tomato soup'],
+                                instructions: ['Butter bread', 'Add cheese', 'Grill until golden', 'Serve with soup']
+                            }
+                        ]
+                    } : {}) // Future weeks empty
+                };
+            }
+            
+            return weeks;
+        }
+        
+        // Week data for different weeks - now dynamically generated
+        const weekData = generateWeekData();
+        
+        let currentWeek = 1; // Default to this week
+        
+        // Function to render week navigation tabs
+        function renderWeekTabs() {
+            const weekTabsContainer = document.getElementById('weekTabs');
+            const weekLabels = ['Last Week', 'This Week', 'Next Week', 'Future'];
+            
+            weekTabsContainer.innerHTML = '';
+            
+            Object.keys(weekData).forEach((weekIndex, index) => {
+                const week = weekData[weekIndex];
+                const isActive = parseInt(weekIndex) === currentWeek;
+                
+                const weekTab = document.createElement('div');
+                weekTab.className = `week-tab ${isActive ? 'active' : ''}`;
+                weekTab.onclick = () => selectWeek(parseInt(weekIndex));
+                weekTab.innerHTML = `
+                    <div class="week-date">${week.range}</div>
+                    <div class="week-label">${weekLabels[index]}</div>
+                `;
+                
+                weekTabsContainer.appendChild(weekTab);
+            });
+        }
+
+        function getMealIcon(type) {
+            const icons = {
+                breakfast: '<path d="M18 21l-4-4h3c0-3.31-2.69-6-6-6s-6 2.69-6 6h3l-4 4-4-4h3c0-4.42 3.58-8 8-8s8 3.58 8 8h3l-4 4z"/>',
+                lunch: '<path d="M8.1 13.34l2.83-2.83L3.91 3.5c-1.56 1.56-1.56 4.09 0 5.66l4.19 4.18zm6.78-1.81c1.53.71 3.68.21 5.27-1.38 1.91-1.91 2.28-4.65.81-6.12-1.46-1.46-4.20-1.10-6.12.81-1.59 1.59-2.09 3.74-1.38 5.27L3.7 19.87l1.41 1.41L12 14.41l6.88 6.88 1.41-1.41L13.41 13l1.47-1.47z"/>',
+                dinner: '<path d="M16 6l2.29 2.29-4.88 4.88-4-4L16 6zm4 0c0 3.31-2.69 6-6 6l-1.83-1.83 1.83-1.83c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2L9.83 8.34 8 6.51c0-3.31 2.69-6 6-6s6 2.69 6 6z"/>'
+            };
+            return icons[type] || icons.breakfast;
+        }
+
+        function getDifficultyColor(difficulty) {
+            const colors = {
+                easy: 'difficulty-easy',
+                medium: 'difficulty-medium',
+                hard: 'difficulty-hard'
+            };
+            return colors[difficulty] || colors.easy;
+        }
+
+        function formatTime(minutes) {
+            if (minutes < 60) return `${minutes} min`;
+            const hours = Math.floor(minutes / 60);
+            const mins = minutes % 60;
+            return mins > 0 ? `${hours}h ${mins}m` : `${hours}h`;
+        }
+
+        function renderDays() {
+            const grid = document.getElementById('daysGrid');
+            
+            // Get current day for highlighting
+            const today = new Date();
+            const currentWeekData = weekData[currentWeek];
+            
+            // Handle both nested meals structure and direct day structure
+            const currentMeals = currentWeekData.meals || currentWeekData;
+            const currentDates = currentWeekData.dates;
+            
+            // Check if today falls in the current selected week
+            let todayIndex = -1;
+            if (currentWeek === 1) { // Only check for current week
+                const todayFormatted = formatDateShort(today);
+                todayIndex = currentDates.findIndex(date => date === todayFormatted);
+            }
+            
+            console.log('Rendering days for week:', currentWeek, 'Meals data:', currentMeals);
+            
+            grid.innerHTML = '';
+
+            days.forEach((day, index) => {
+                const meals = currentMeals[day] || [];
+                console.log(`Day ${day} meals:`, meals);
+                const totalCalories = meals.reduce((sum, meal) => sum + meal.calories, 0);
+                const totalCost = meals.reduce((sum, meal) => sum + meal.cost, 0);
+                const totalProtein = meals.reduce((sum, meal) => sum + meal.protein, 0);
+                
+                const isToday = index === todayIndex;
+                const isEmpty = meals.length === 0;
+                const isPastWeek = currentWeek === 0;
+                
+                const dayCard = document.createElement('div');
+                dayCard.className = `day-card ${isPastWeek ? 'past-week' : ''}`;
+                dayCard.innerHTML = `
+                    ${isPastWeek ? '<div class="past-week-indicator">Past Week</div>' : ''}
+                    <div class="day-header ${isToday ? 'today' : ''}">
+                        <div class="day-info">
+                            <div class="day-name">${dayNames[index]}</div>
+                            <div class="day-date">${currentDates[index]}</div>
+                        </div>
+                        <div class="day-nutrition">
+                            <div class="nutrition-item">
+                                <div class="nutrition-value">${totalCalories}</div>
+                                <div class="nutrition-label">calories</div>
+                            </div>
+                            <div class="nutrition-item">
+                                <div class="nutrition-value">$${totalCost.toFixed(2)}</div>
+                                <div class="nutrition-label">cost</div>
+                            </div>
+                            <div class="nutrition-item">
+                                <div class="nutrition-value">${totalProtein}g</div>
+                                <div class="nutrition-label">protein</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="meals-container">
+                        ${meals.map(meal => `
+                            <div class="meal-item ${meal.type}">
+                                <div class="meal-header">
+                                    <div class="meal-icon-wrapper">
+                                        <div class="meal-icon ${meal.type}">
+                                            <svg viewBox="0 0 24 24">${getMealIcon(meal.type)}</svg>
+                                        </div>
+                                        <div class="meal-type-label ${meal.type}">${meal.type}</div>
+                                    </div>
+                                </div>
+                                <div class="meal-info">
+                                    <div class="meal-name">${meal.name}</div>
+                                    <div class="meal-description">${meal.description}</div>
+                                    <div class="meal-stats">
+                                        <div class="meal-stat">
+                                            🔥 ${meal.calories} cal
+                                        </div>
+                                        <div class="meal-stat">
+                                            💪 ${meal.protein}g protein
+                                        </div>
+                                        <div class="meal-stat">
+                                            💰 $${meal.cost}
+                                        </div>
+                                        <div class="meal-stat">
+                                            ⏱️ ${formatTime(meal.time)}
+                                        </div>
+                                        <div class="difficulty-badge ${getDifficultyColor(meal.difficulty)}">
+                                            ${meal.difficulty}
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="meal-actions">
+                                    <button class="action-btn view-recipe" onclick="viewRecipe('${day}', '${meal.type}')" ${isPastWeek ? 'disabled' : ''}>
+                                        View Recipe
+                                    </button>
+                                    <button class="action-btn mark-cooked" onclick="markAsCooked()" ${isPastWeek ? 'disabled' : ''}>
+                                        Mark Cooked
+                                    </button>
+                                </div>
+                            </div>
+                        `).join('')}
+                        ${isEmpty ? `
+                            <div class="empty-day">
+                                <p>${isPastWeek ? 'No meals were planned for this day' : 'Ready to plan some delicious meals?'}</p>
+                                ${!isPastWeek ? `<button class="btn btn-primary" onclick="addMealPlan('${day}', ${index})">Create Meal Plan</button>` : ''}
+                            </div>
+                        ` : ''}
+                    </div>
+                `;
+                
+                grid.appendChild(dayCard);
+                
+                // Add animation delay
+                dayCard.style.animationDelay = `${index * 0.1}s`;
+            });
+        }
+
+        function updateWeeklyOverview() {
+            const currentMeals = weekData[currentWeek].meals;
+            let totalCost = 0;
+            let totalCalories = 0;
+            let totalProtein = 0;
+            let totalRecipes = 0;
+
+            days.forEach(day => {
+                const dayMeals = currentMeals[day] || [];
+                dayMeals.forEach(meal => {
+                    totalCost += meal.cost;
+                    totalCalories += meal.calories;
+                    totalProtein += meal.protein;
+                    totalRecipes++;
+                });
+            });
+
+            const avgCalories = totalRecipes > 0 ? Math.round(totalCalories / 7) : 0;
+            const avgProtein = totalRecipes > 0 ? Math.round(totalProtein / 7) : 0;
+
+            // Update overview stats
+            document.querySelector('.overview-stat-value').textContent = `$${totalCost.toFixed(2)}`;
+            document.querySelectorAll('.overview-stat-value')[1].textContent = avgCalories.toLocaleString();
+            document.querySelectorAll('.overview-stat-value')[2].textContent = `${avgProtein}g`;
+            document.querySelectorAll('.overview-stat-value')[3].textContent = totalRecipes;
+        }
+
+        function selectWeek(weekIndex) {
+            // Update current week and re-render
+            currentWeek = weekIndex;
+            renderWeekTabs(); // Re-render tabs to update active state
+            renderDays();
+            updateWeeklyOverview();
+            
+            // Update floating action button visibility
+            const floatingBtn = document.querySelector('.floating-action');
+            if (weekIndex === 1) {
+                floatingBtn.style.display = 'flex'; // Show for current week
+            } else {
+                floatingBtn.style.display = 'none'; // Hide for other weeks
+            }
+        }
+
+        function viewRecipe(day, mealType) {
+            const currentMeals = weekData[currentWeek].meals;
+            const meals = currentMeals[day];
+            const meal = meals.find(m => m.type === mealType);
+            
+            if (meal) {
+                document.getElementById('modalTitle').textContent = meal.name;
+                document.getElementById('modalBody').innerHTML = `
+                    <div style="margin-bottom: 2rem;">
+                        <img src="https://via.placeholder.com/400x200/4CAF50/ffffff?text=${encodeURIComponent(meal.name)}" 
+                             alt="${meal.name}" 
+                             style="width: 100%; border-radius: 8px; margin-bottom: 1rem;">
+                        <p style="color: var(--text-light); margin-bottom: 2rem;">${meal.description}</p>
+                        
+                        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 2rem;">
+                            <div style="text-align: center; padding: 1rem; background: var(--background-light); border-radius: 8px;">
+                                <div style="font-weight: 600; font-size: 1.2rem; color: var(--primary-green);">${meal.calories}</div>
+                                <div style="font-size: 0.8rem; color: var(--text-muted);">Calories</div>
+                            </div>
+                            <div style="text-align: center; padding: 1rem; background: var(--background-light); border-radius: 8px;">
+                                <div style="font-weight: 600; font-size: 1.2rem; color: var(--primary-green);">${meal.protein}g</div>
+                                <div style="font-size: 0.8rem; color: var(--text-muted);">Protein</div>
+                            </div>
+                            <div style="text-align: center; padding: 1rem; background: var(--background-light); border-radius: 8px;">
+                                <div style="font-weight: 600; font-size: 1.2rem; color: var(--primary-green);">$${meal.cost}</div>
+                                <div style="font-size: 0.8rem; color: var(--text-muted);">Cost</div>
+                            </div>
+                            <div style="text-align: center; padding: 1rem; background: var(--background-light); border-radius: 8px;">
+                                <div style="font-weight: 600; font-size: 1.2rem; color: var(--primary-green);">${formatTime(meal.time)}</div>
+                                <div style="font-size: 0.8rem; color: var(--text-muted);">Time</div>
+                            </div>
+                        </div>
+                        
+                        <h4 style="color: var(--primary-green); margin-bottom: 1rem;">Ingredients</h4>
+                        <div style="margin-bottom: 2rem;">
+                            ${meal.ingredients.map((ingredient, index) => `
+                                <div style="display: flex; align-items: center; justify-content: space-between; padding: 0.75rem; margin-bottom: 0.5rem; background: var(--background-light); border-radius: 6px;">
+                                    <span style="flex: 1;">${ingredient}</span>
+                                    <button onclick="addToBuyList('${ingredient}', '${meal.name}')" style="background: #FF9800; color: white; border: none; padding: 0.4rem 0.8rem; border-radius: 4px; font-size: 0.75rem; cursor: pointer; transition: var(--transition);">
+                                        + Buy List
+                                    </button>
+                                </div>
+                            `).join('')}
+                        </div>
+                        
+                        <h4 style="color: var(--primary-green); margin-bottom: 1rem;">Instructions</h4>
+                        <ol>
+                            ${meal.instructions.map((instruction, index) => `<li style="margin-bottom: 0.5rem;">${instruction}</li>`).join('')}
+                        </ol>
+                    </div>
+                `;
+                document.getElementById('recipeModal').style.display = 'block';
+            }
+        }
+
+        function closeModal() {
+            document.getElementById('recipeModal').style.display = 'none';
+        }
+
+        function markAsCooked() {
+            showSnackbar('Meal marked as cooked! 🍽️', 'success', 3000);
+        }
+
+        function addMealPlan(day, dayIndex) {
+            const weekLabels = ['Last Week', 'This Week', 'Next Week', 'Future Week'];
+            const currentWeekLabel = weekLabels[currentWeek];
+            const dayName = dayNames[dayIndex];
+            const dayDate = weekData[currentWeek].dates[dayIndex];
+            
+            const message = `🍽️ Planning meals for ${dayName}, ${dayDate}\n\nOur AI chef is analyzing your preferences and dietary needs to create the perfect meal combination for this day.`;
+            
+            showSnackbar(message, 'info', 3000);
+            
+            // Show loading and then generate meal plan after 3 seconds
+            setTimeout(() => {
+                generateMealPlanForDay(day, dayIndex);
+            }, 3000);
+        }
+
+        function generateMealPlanForDay(day, dayIndex) {
+            // Sample meal plans to randomly select from
+            const sampleMealPlans = [
+                {
+                    breakfast: { name: 'Masala Oats', description: 'Spiced oats with vegetables', calories: 280, protein: 12, cost: 2.50, difficulty: 'easy', time: 15 },
+                    lunch: { name: 'Dal Tadka', description: 'Yellow lentils with tempering and roti', calories: 420, protein: 18, cost: 3.75, difficulty: 'easy', time: 30 },
+                    dinner: { name: 'Palak Paneer', description: 'Spinach curry with cottage cheese', calories: 380, protein: 22, cost: 5.25, difficulty: 'medium', time: 35 }
+                },
+                {
+                    breakfast: { name: 'Upma', description: 'Semolina porridge with vegetables', calories: 320, protein: 8, cost: 2.25, difficulty: 'easy', time: 20 },
+                    lunch: { name: 'Rajma Rice', description: 'Kidney beans curry with steamed rice', calories: 450, protein: 16, cost: 4.50, difficulty: 'medium', time: 40 },
+                    dinner: { name: 'Chicken Curry', description: 'Spicy chicken curry with chapati', calories: 520, protein: 35, cost: 8.75, difficulty: 'medium', time: 45 }
+                },
+                {
+                    breakfast: { name: 'Poha', description: 'Flattened rice with peanuts and curry leaves', calories: 300, protein: 6, cost: 2.00, difficulty: 'easy', time: 15 },
+                    lunch: { name: 'Curd Rice', description: 'Yogurt rice with pickle and papad', calories: 350, protein: 12, cost: 3.25, difficulty: 'easy', time: 10 },
+                    dinner: { name: 'Fish Curry', description: 'Coconut-based fish curry with rice', calories: 480, protein: 32, cost: 9.25, difficulty: 'medium', time: 40 }
+                }
+            ];
+
+            // Randomly select a meal plan
+            const selectedPlan = sampleMealPlans[Math.floor(Math.random() * sampleMealPlans.length)];
+            
+            console.log('Generating meal plan for:', day, dayIndex, 'Current week:', currentWeek);
+            
+            // Initialize the structure if needed
+            if (!weekData[currentWeek].meals) {
+                weekData[currentWeek].meals = {};
+            }
+            
+            if (!weekData[currentWeek].meals[day]) {
+                weekData[currentWeek].meals[day] = [];
+            }
+            
+            // Add the meals to the specified day
+            weekData[currentWeek].meals[day] = [
+                { type: 'breakfast', ...selectedPlan.breakfast, ingredients: ['Oats', 'Vegetables', 'Spices'], instructions: ['Heat pan', 'Add oats and vegetables', 'Season and cook'] },
+                { type: 'lunch', ...selectedPlan.lunch, ingredients: ['Lentils', 'Tomatoes', 'Onions', 'Spices'], instructions: ['Cook lentils', 'Prepare tempering', 'Mix and simmer'] },
+                { type: 'dinner', ...selectedPlan.dinner, ingredients: ['Main ingredient', 'Vegetables', 'Spices'], instructions: ['Prepare base', 'Add main ingredient', 'Cook until done'] }
+            ];
+            
+            console.log('Meal plan added to weekData:', weekData[currentWeek].meals[day]);
+            
+            // Re-render the days to show the new meal plan
+            renderDays();
+            
+            // Show success message
+            showSnackbar(`✨ Meal plan created for ${dayNames[dayIndex]}!\n\nYour personalized meals are ready. Check out the breakfast, lunch, and dinner options we've prepared for you.`, 'success', 4000);
+        }
+
+        function generateNewPlan() {
+            showConfirmSnackbar(
+                'Generate a new meal plan for this week?\n\nThis will replace your current plan.',
+                () => {
+                    showSnackbar('🍳 Meal generation in progress...\n\nSit tight! We\'re creating your personalized weekly meal plan. This usually takes 30-60 seconds.', 'info', 6000);
+                }
+            );
+        }
+
+        function addToBuyList(ingredient, recipeName) {
+            // Get existing buy list from localStorage
+            let buyList = JSON.parse(localStorage.getItem('nutrimind_buylist') || '[]');
+            
+            // Check if ingredient already exists
+            const existingItem = buyList.find(item => item.ingredient.toLowerCase() === ingredient.toLowerCase());
+            
+            if (existingItem) {
+                existingItem.quantity += 1;
+                existingItem.recipes.push(recipeName);
+            } else {
+                buyList.push({
+                    id: Date.now(),
+                    ingredient: ingredient,
+                    quantity: 1,
+                    recipes: [recipeName],
+                    addedDate: new Date().toISOString(),
+                    purchased: false
+                });
+            }
+            
+            // Save to localStorage
+            localStorage.setItem('nutrimind_buylist', JSON.stringify(buyList));
+            
+            // Update header count
+            updateBuyListCount();
+            
+            // Show confirmation with new snackbar
+            showSnackbar(`Added "${ingredient}" to buy list!`, 'success', 3000);
+        }
+
+        // Close modal when clicking outside
+        document.getElementById('recipeModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeModal();
+            }
+        });
+
+        // Initialize the page
+        document.addEventListener('DOMContentLoaded', function() {
+            renderWeekTabs();
+            renderDays();
+            updateWeeklyOverview();
+            updateBuyListCount();
+            startTipsRotation();
+        });
+
+        // Update buy list count in header
+        function updateBuyListCount() {
+            const buyList = JSON.parse(localStorage.getItem('nutrimind_buylist') || '[]');
+            const count = buyList.filter(item => !item.purchased).length;
+            document.getElementById('buyListCount').textContent = count;
+        }
+
+        // Healthy Tips System
+        const healthyTips = [
+            {
+                category: "Hydration",
+                tip: "Stay hydrated! Drink at least 8 glasses of water daily to support your metabolism and maintain energy levels throughout the day."
+            },
+            {
+                category: "Nutrition",
+                tip: "Include a variety of colorful vegetables in your meals. Different colors provide different nutrients and antioxidants for optimal health."
+            },
+            {
+                category: "Exercise",
+                tip: "Take a 10-minute walk after meals to help with digestion and stabilize blood sugar levels naturally."
+            },
+            {
+                category: "Sleep",
+                tip: "Aim for 7-9 hours of quality sleep each night. Good sleep is essential for muscle recovery and hormone regulation."
+            },
+            {
+                category: "Mindfulness",
+                tip: "Practice mindful eating by chewing slowly and paying attention to hunger cues. This helps prevent overeating."
+            },
+            {
+                category: "Nutrition",
+                tip: "Choose whole grains over refined grains. They provide more fiber, vitamins, and minerals for sustained energy."
+            },
+            {
+                category: "Exercise",
+                tip: "Incorporate strength training 2-3 times per week to build muscle mass and boost your metabolic rate."
+            },
+            {
+                category: "Hydration",
+                tip: "Start your day with a glass of water to kickstart your metabolism and rehydrate after hours of sleep."
+            },
+            {
+                category: "Nutrition",
+                tip: "Include healthy fats like avocados, nuts, and olive oil in your diet. They help with nutrient absorption and satiety."
+            },
+            {
+                category: "Mental Health",
+                tip: "Take regular breaks from screens and spend time in nature to reduce stress and improve mental well-being."
+            },
+            {
+                category: "Meal Planning",
+                tip: "Prep healthy snacks in advance like cut vegetables, fruits, or nuts to avoid reaching for processed foods."
+            },
+            {
+                category: "Exercise",
+                tip: "Find physical activities you enjoy. Dancing, hiking, or playing sports makes exercise feel less like a chore."
+            },
+            {
+                category: "Nutrition",
+                tip: "Eat protein with every meal to help maintain muscle mass, stabilize blood sugar, and keep you feeling full longer."
+            },
+            {
+                category: "Habits",
+                tip: "Create a consistent meal schedule. Regular eating patterns help regulate your metabolism and energy levels."
+            },
+            {
+                category: "Social Health",
+                tip: "Share meals with family or friends when possible. Social eating can improve digestion and mental health."
+            }
+        ];
+
+        let currentTipIndex = 0;
+        let isWidgetVisible = false;
+
+        function showTipsWidget() {
+            const widget = document.getElementById('tipsWidget');
+            widget.classList.add('show');
+            isWidgetVisible = true;
+            displayCurrentTip();
+        }
+
+        function closeTipsWidget() {
+            const widget = document.getElementById('tipsWidget');
+            widget.classList.remove('show');
+            isWidgetVisible = false;
+        }
+
+        function displayCurrentTip() {
+            const tip = healthyTips[currentTipIndex];
+            document.getElementById('tipCategory').textContent = tip.category;
+            document.getElementById('tipContent').textContent = tip.tip;
+            document.getElementById('tipCounter').textContent = `${currentTipIndex + 1} / ${healthyTips.length}`;
+            
+            // Update navigation buttons
+            document.getElementById('prevTip').disabled = currentTipIndex === 0;
+            document.getElementById('nextTip').disabled = currentTipIndex === healthyTips.length - 1;
+        }
+
+        function nextTip() {
+            if (currentTipIndex < healthyTips.length - 1) {
+                currentTipIndex++;
+                displayCurrentTip();
+            }
+        }
+
+        function previousTip() {
+            if (currentTipIndex > 0) {
+                currentTipIndex--;
+                displayCurrentTip();
+            }
+        }
+
+        function startTipsRotation() {
+            // Show tips widget every 3-4 minutes (random between 180-240 seconds)
+            const showTipsInterval = () => {
+                if (!isWidgetVisible) {
+                    showTipsWidget();
+                    
+                    // Auto-hide after 12 seconds
+                    setTimeout(() => {
+                        if (isWidgetVisible) {
+                            closeTipsWidget();
+                        }
+                    }, 12000);
+                    
+                    // Move to next tip for the next display
+                    currentTipIndex = (currentTipIndex + 1) % healthyTips.length;
+                }
+                
+                // Schedule next tip display (3-4 minutes)
+                const nextInterval = Math.random() * (240000 - 180000) + 180000; // 3-4 minutes in milliseconds
+                setTimeout(showTipsInterval, nextInterval);
+            };
+            
+            // Start the cycle after initial delay (20 seconds for demo)
+            setTimeout(showTipsInterval, 20000);
+        }
+
+        // Add click outside to close tips widget
+        document.addEventListener('click', function(e) {
+            const widget = document.getElementById('tipsWidget');
+            if (isWidgetVisible && !widget.contains(e.target)) {
+                closeTipsWidget();
+            }
+            
+            // Close profile dropdown when clicking outside
+            const profileMenu = document.querySelector('.profile-menu');
+            const profileDropdown = document.getElementById('profileDropdown');
+            const profileButton = document.querySelector('.profile-button');
+            
+            if (profileMenu && !profileMenu.contains(e.target)) {
+                profileDropdown.classList.remove('show');
+                profileButton.classList.remove('active');
+            }
+        });
+
+        // Profile dropdown functions
+        function toggleProfileDropdown() {
+            const dropdown = document.getElementById('profileDropdown');
+            const button = document.querySelector('.profile-button');
+            
+            dropdown.classList.toggle('show');
+            button.classList.toggle('active');
+        }
+
+        function showSettings() {
+            const message = `⚙️ Opening Settings...\n\nTaking you to your personalized settings where you can customize dietary preferences, notifications, and account options.`;
+            showSnackbar(message, 'info', 4000);
+        }
+
+        function showNutritionGoals() {
+            const message = `🎯 Loading Nutrition Goals...\n\nAccessing your personalized nutrition dashboard where you can set and track your health targets.`;
+            showSnackbar(message, 'info', 4000);
+        }
+
+        function showHelp() {
+            const message = `💬 Connecting you to Support...\n\nOpening our help center with FAQs, tutorials, and live chat support.`;
+            showSnackbar(message, 'info', 3000);
+        }
+
+        function logout() {
+            showConfirmSnackbar(
+                'Are you sure you want to sign out?',
+                () => {
+                    // Clear any stored user data
+                    localStorage.removeItem('nutrimind_user');
+                    showSnackbar('Signed out successfully! Redirecting...', 'success', 2000);
+                    // Redirect to login after a short delay
+                    setTimeout(() => {
+                        window.location.href = 'login.html';
+                    }, 2000);
+                }
+            );
+        }
+    </script>
+</body>
+</html>
