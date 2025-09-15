@@ -1,25 +1,56 @@
 /* NutriMind Demo - Main Styles */
 :root {
+  /* Enhanced Color Palette */
   --primary-green: #4CAF50;
-  --primary-green-dark: #45a049;
+  --primary-green-dark: #2E7D32;
   --primary-green-light: #66BB6A;
+  --primary-green-ultra-light: #A5D6A7;
   --secondary-green: #81C784;
   --accent-orange: #FF8A65;
+  --accent-orange-light: #FFAB91;
   --accent-blue: #42A5F5;
-  --text-dark: #2E7D32;
+  --accent-purple: #AB47BC;
+  --accent-teal: #26A69A;
+  --accent-lime: #9CCC65;
+  
+  /* Nature-inspired colors */
+  --fruit-red: #E57373;
+  --fruit-orange: #FFB74D;
+  --fruit-yellow: #FFF176;
+  --veggie-green: #AED581;
+  --berry-purple: #BA68C8;
+  
+  --text-dark: #1B5E20;
+  --text-medium: #388E3C;
   --text-light: #757575;
-  --text-muted: #BDBDBD;
-  --background-light: #F8F9FA;
+  --text-muted: #9E9E9E;
+  
+  --background-gradient-1: linear-gradient(135deg, #E8F5E8 0%, #F1F8E9 25%, #E8F5E8 50%, #F3E5F5 75%, #E8F5E8 100%);
+  --background-gradient-2: linear-gradient(45deg, #F1F8E9 0%, #E3F2FD 50%, #F9FBE7 100%);
   --background-white: #FFFFFF;
-  --shadow-light: 0 2px 8px rgba(0,0,0,0.1);
-  --shadow-medium: 0 4px 16px rgba(0,0,0,0.15);
-  --shadow-heavy: 0 8px 32px rgba(0,0,0,0.2);
-  --border-radius: 12px;
-  --border-radius-small: 8px;
-  --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  --surface-color: rgba(255, 255, 255, 0.95);
+  
+  --shadow-light: 0 2px 12px rgba(76, 175, 80, 0.15);
+  --shadow-medium: 0 4px 20px rgba(76, 175, 80, 0.2);
+  --shadow-heavy: 0 8px 40px rgba(76, 175, 80, 0.25);
+  --shadow-colored: 0 4px 20px rgba(255, 138, 101, 0.3);
+  
+  --border-radius: 16px;
+  --border-radius-small: 12px;
+  --border-radius-large: 24px;
+  
+  --transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-fast: all 0.2s ease-out;
+  --transition-bounce: all 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  
   --font-primary: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  
+  /* Animation variables */
+  --float-duration: 20s;
+  --bounce-duration: 2s;
 }
 
+/* Enhanced Global Styles */
 * {
   margin: 0;
   padding: 0;
@@ -30,8 +61,33 @@ body {
   font-family: var(--font-primary);
   line-height: 1.6;
   color: var(--text-dark);
-  background: linear-gradient(135deg, var(--background-light) 0%, #e8f5e8 100%);
+  background: var(--background-gradient-1);
   min-height: 100vh;
+  position: relative;
+  overflow-x: hidden;
+}
+
+/* Floating Background Animation */
+body::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: 
+    radial-gradient(circle at 20% 20%, rgba(76, 175, 80, 0.1) 0%, transparent 50%),
+    radial-gradient(circle at 80% 60%, rgba(255, 138, 101, 0.1) 0%, transparent 50%),
+    radial-gradient(circle at 40% 80%, rgba(66, 165, 245, 0.1) 0%, transparent 50%);
+  z-index: -2;
+  animation: backgroundShift 30s ease-in-out infinite;
+}
+
+@keyframes backgroundShift {
+  0%, 100% { transform: translateX(0) translateY(0) rotate(0deg); }
+  25% { transform: translateX(20px) translateY(-20px) rotate(1deg); }
+  50% { transform: translateX(-15px) translateY(15px) rotate(-0.5deg); }
+  75% { transform: translateX(10px) translateY(-10px) rotate(0.5deg); }
 }
 
 /* Typography */
@@ -39,11 +95,16 @@ h1, h2, h3, h4, h5, h6 {
   font-weight: 600;
   margin-bottom: 0.5em;
   color: var(--text-dark);
+  text-shadow: 0 1px 3px rgba(0,0,0,0.1);
 }
 
 h1 {
   font-size: 2.5rem;
   font-weight: 700;
+  background: linear-gradient(135deg, var(--primary-green) 0%, var(--accent-teal) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 h2 {
@@ -344,4 +405,184 @@ p {
     padding: 0.625rem 1.25rem;
     font-size: 0.9rem;
   }
+}
+
+/* ========================================
+   🍎 FLOATING FOOD ELEMENTS SYSTEM 🥕
+   ======================================== */
+
+.floating-elements {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: -1;
+  overflow: hidden;
+}
+
+.floating-food {
+  position: absolute;
+  font-size: 2rem;
+  opacity: 0.6;
+  animation: float linear infinite;
+  filter: drop-shadow(0 2px 8px rgba(0,0,0,0.1));
+}
+
+.floating-food.small {
+  font-size: 1.5rem;
+  opacity: 0.4;
+}
+
+.floating-food.large {
+  font-size: 2.5rem;
+  opacity: 0.7;
+}
+
+@keyframes float {
+  0% {
+    transform: translateY(100vh) rotate(0deg) scale(1);
+    opacity: 0;
+  }
+  10% {
+    opacity: 0.6;
+  }
+  90% {
+    opacity: 0.6;
+  }
+  100% {
+    transform: translateY(-100px) rotate(360deg) scale(1.1);
+    opacity: 0;
+  }
+}
+
+/* Bounce animation for interactive elements */
+@keyframes bounceIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.3) rotate(-10deg);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.05) rotate(5deg);
+  }
+  70% {
+    transform: scale(0.9) rotate(-2deg);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) rotate(0deg);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.8;
+  }
+  50% {
+    transform: scale(1.05);
+    opacity: 1;
+  }
+}
+
+@keyframes wiggle {
+  0%, 100% { transform: rotate(-3deg); }
+  50% { transform: rotate(3deg); }
+}
+
+/* Enhanced card animations */
+.card {
+  position: relative;
+  background: var(--surface-color);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  box-shadow: var(--shadow-medium);
+  border-radius: var(--border-radius);
+  padding: 2rem;
+  transition: var(--transition);
+  animation: slideUp 0.6s ease-out;
+}
+
+.card:hover {
+  transform: translateY(-8px);
+  box-shadow: var(--shadow-heavy);
+}
+
+.card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, var(--primary-green) 0%, var(--accent-orange) 50%, var(--accent-blue) 100%);
+  border-radius: var(--border-radius-small) var(--border-radius-small) 0 0;
+}
+
+/* Enhanced button animations */
+.btn {
+  position: relative;
+  overflow: hidden;
+  transition: var(--transition);
+}
+
+.btn::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  transition: width 0.3s, height 0.3s;
+}
+
+.btn:hover::before {
+  width: 300px;
+  height: 300px;
+}
+
+.btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(76, 175, 80, 0.4);
+}
+
+/* Floating action button style */
+.btn-floating {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--shadow-colored);
+  background: linear-gradient(135deg, var(--accent-orange) 0%, var(--fruit-orange) 100%);
+  border: none;
+  cursor: pointer;
+  transition: var(--transition-bounce);
+  animation: pulse 3s infinite;
+}
+
+.btn-floating:hover {
+  transform: scale(1.1) rotate(5deg);
+  animation: wiggle 0.5s ease-in-out;
+}
+
+/* Gradient text effects */
+.gradient-text {
+  background: linear-gradient(135deg, var(--primary-green) 0%, var(--accent-teal) 50%, var(--accent-purple) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  background-size: 200% 200%;
+  animation: gradientShift 4s ease-in-out infinite;
+}
+
+@keyframes gradientShift {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
 }

@@ -8,18 +8,41 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/main.css">
+    <script src="js/animations.js" defer></script>
     <style>
         .purchase-page {
-            background: linear-gradient(135deg, #e8f5e8 0%, #f1f8e9 100%);
+            background: var(--background-gradient-1);
             min-height: 100vh;
+            position: relative;
+            overflow-x: hidden;
         }
 
-        /* Header Styles */
+        /* Enhanced Header Styles */
         .purchase-header {
-            background: linear-gradient(135deg, var(--primary-green) 0%, var(--primary-green-dark) 100%);
+            background: linear-gradient(135deg, var(--primary-green) 0%, var(--primary-green-dark) 60%, var(--accent-teal) 100%);
             color: white;
             padding: 2rem 0;
-            box-shadow: var(--shadow-medium);
+            box-shadow: var(--shadow-heavy);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .purchase-header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                radial-gradient(circle at 25% 25%, rgba(255, 255, 255, 0.1) 0%, transparent 40%),
+                radial-gradient(circle at 75% 75%, rgba(255, 138, 101, 0.2) 0%, transparent 50%);
+            animation: headerShimmer 10s ease-in-out infinite;
+        }
+
+        @keyframes headerShimmer {
+            0%, 100% { opacity: 1; transform: translateX(0) scale(1); }
+            50% { opacity: 0.8; transform: translateX(15px) scale(1.05); }
         }
 
         .header-content {
