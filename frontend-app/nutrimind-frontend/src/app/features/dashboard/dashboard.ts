@@ -277,13 +277,13 @@ export class DashboardComponent implements OnInit {
       }).subscribe({
         next: (response) => {
           console.log('✅ GenerateMealPlan response received:', response);
-          if (response && response.orchestrationId) {
+          if (response && response.OrchestrationId) {
             this.snackBar.open('Meal plan generation started! This may take a few minutes.', 'OK', {
               duration: 5000
             });
             
             // Poll for completion
-            this.pollGenerationStatus(response.orchestrationId);
+            this.pollGenerationStatus(response.OrchestrationId);
           } else {
             console.error('❌ Invalid response structure - no orchestrationId:', response);
             this.snackBar.open('Invalid response from server', 'OK', {
@@ -322,13 +322,13 @@ export class DashboardComponent implements OnInit {
       }).subscribe({
         next: (response) => {
           console.log('✅ Regenerate response received:', response);
-          if (response && response.orchestrationId) {
+          if (response && response.OrchestrationId) {
             this.snackBar.open('Meal plan regeneration started! This may take a few minutes.', 'OK', {
               duration: 5000
             });
             
             // Poll for completion
-            this.pollGenerationStatus(response.orchestrationId);
+            this.pollGenerationStatus(response.OrchestrationId);
           } else {
             console.error('❌ Invalid response structure - no orchestrationId:', response);
             this.snackBar.open('Invalid response from server', 'OK', {

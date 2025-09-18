@@ -14,11 +14,11 @@ export class ProfileService {
   constructor(private http: HttpClient) {}
 
   createProfile(request: CreateUserProfileRequest): Observable<UserProfile> {
-    return this.http.post<ApiResponse<UserProfile>>(`${this.API_BASE}`, request)
+    return this.http.post<any>(`${this.API_BASE}`, request)
       .pipe(
         map(response => {
-          if (response.success && response.data) {
-            return response.data;
+          if (response.Success && response.Data) {
+            return response.Data;
           }
           throw new Error(response.message || 'Profile creation failed');
         }),

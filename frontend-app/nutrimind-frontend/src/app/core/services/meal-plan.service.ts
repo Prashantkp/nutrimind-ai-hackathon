@@ -89,8 +89,8 @@ export class MealPlanService {
           } else if (response) {
             // Try to extract orchestrationId from any level
             mappedResponse = {
-              orchestrationId: response.orchestrationId || response.Data?.orchestrationId || null,
-              status: 'Started' as const
+              OrchestrationId: response.orchestrationId || response.Data?.orchestrationId || null,
+              Status: 'Started' as const
             };
           } else {
             console.error('❌ Unexpected response structure:', response);
@@ -100,9 +100,9 @@ export class MealPlanService {
           console.log('📊 Mapped response:', mappedResponse);
           
           // Validate required fields
-          if (!mappedResponse.orchestrationId) {
-            console.error('❌ Missing orchestrationId in response:', mappedResponse);
-            throw new Error('Missing orchestrationId in API response');
+          if (!mappedResponse.OrchestrationId) {
+            console.error('❌ Missing OrchestrationId in response:', mappedResponse);
+            throw new Error('Missing OrchestrationId in API response');
           }
           
           return mappedResponse;
@@ -117,10 +117,10 @@ export class MealPlanService {
   /**
    * Check the status of meal plan generation
    */
-  getMealPlanStatus(orchestrationId: string): Observable<any> {
-    console.log('🔍 Checking meal plan status for orchestrationId:', orchestrationId);
+  getMealPlanStatus(OrchestrationId: string): Observable<any> {
+    console.log('🔍 Checking meal plan status for OrchestrationId:', OrchestrationId);
     const headers = this.getAuthHeaders();
-    return this.http.get<any>(`${this.apiUrl}/mealplans/status/${orchestrationId}`, { headers })
+    return this.http.get<any>(`${this.apiUrl}/mealplans/status/${OrchestrationId}`, { headers })
       .pipe(
         map(response => {
           console.log('📈 Raw status response:', response);
