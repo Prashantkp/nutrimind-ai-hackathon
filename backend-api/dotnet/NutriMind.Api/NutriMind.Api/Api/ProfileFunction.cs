@@ -13,15 +13,18 @@ namespace NutriMind.Api.Api
         private readonly ILogger<ProfileFunction> _logger;
         private readonly IUserProfileService _userProfileService;
         private readonly IAuthService _authService;
+        private readonly IUserService _userService;
 
         public ProfileFunction(
             ILogger<ProfileFunction> logger, 
             IUserProfileService userProfileService,
-            IAuthService authService)
+            IAuthService authService,
+            IUserService userService)
         {
             _logger = logger;
             _userProfileService = userProfileService;
             _authService = authService;
+            _userService = userService;
         }
 
         [Function("CreateProfile")]
@@ -55,12 +58,14 @@ namespace NutriMind.Api.Api
                     return await CreateErrorResponse(req, HttpStatusCode.Conflict, "User profile already exists");
                 }
 
+                // get email id from the user table based on user id. Otherwise remove the email from UserProfile table.
+                var userResult = await _userService.GetUserByIdAsync(userId);
                 // Create user profile
                 var userProfile = new UserProfile
                 {
                     Id = Guid.NewGuid().ToString(),
                     UserId = userId,
-                    Email = createRequest.Email,
+                    Email = userResult.Data.Email,
                     FirstName = createRequest.FirstName,
                     LastName = createRequest.LastName,
                     Age = createRequest.Age,

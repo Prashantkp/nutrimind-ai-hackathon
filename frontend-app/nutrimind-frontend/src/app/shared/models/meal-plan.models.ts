@@ -69,8 +69,8 @@ export interface GenerateMealPlanRequest {
 }
 
 export interface MealPlanGenerationResponse {
-	orchestrationId: string;
-	status: MealPlanStatus | 'Started' | 'Queued';
+	OrchestrationId: string;
+	Status: MealPlanStatus | 'Started' | 'Queued';
 	message?: string;
 }
 
