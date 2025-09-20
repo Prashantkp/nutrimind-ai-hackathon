@@ -9,6 +9,7 @@ import {
   MealPlanGenerationResponse,
   WeekViewData
 } from '../../shared/models/meal-plan.models';
+import { ObjectTransformer } from '../utilities/object-transformer.util';
 
 @Injectable({
   providedIn: 'root'
@@ -32,14 +33,17 @@ export class MealPlanService {
           // Handle the API response structure: {Success: true, Data: [...], Message: "..."}
           let mappedResponse: MealPlan[] = [];
           
-          if (response && response.Success && response.Data) {
-            mappedResponse = Array.isArray(response.Data) ? response.Data : [response.Data];
-          } else if (Array.isArray(response)) {
+          // Convert the response to camelCase
+          const camelCaseResponse = ObjectTransformer.toCamelCase(response);
+
+          if (camelCaseResponse && camelCaseResponse.success && camelCaseResponse.data) {
+            mappedResponse = Array.isArray(camelCaseResponse.data) ? camelCaseResponse.data : [camelCaseResponse.data];
+          } else if (Array.isArray(camelCaseResponse)) {
             // Direct array response
-            mappedResponse = response;
-          } else if (response && typeof response === 'object' && !Array.isArray(response)) {
+            mappedResponse = camelCaseResponse;
+          } else if (camelCaseResponse && typeof camelCaseResponse === 'object' && !Array.isArray(camelCaseResponse)) {
             // Single meal plan object
-            mappedResponse = [response];
+            mappedResponse = [camelCaseResponse];
           }
           
           console.log('📊 Mapped meal plans:', mappedResponse);
