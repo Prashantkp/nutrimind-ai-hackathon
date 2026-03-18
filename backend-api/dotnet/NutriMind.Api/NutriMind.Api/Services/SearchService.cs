@@ -26,12 +26,12 @@ namespace NutriMind.Api.Services
         {
             _logger = logger;
 			var keyVaultUri = configuration["KeyVaultUri"];
-			var kvClient = new SecretClient(new Uri(keyVaultUri), new DefaultAzureCredential());
-			var endpoint = configuration["SearchEndpoint"];
-            var apiKey = kvClient.GetSecret("ai-search-key").Value.Value;
-            var indexName = configuration["AzureSearchIndex"] ?? "reciepe-index-new";
+			var keyVaultClient = new SecretClient(new Uri(keyVaultUri), new DefaultAzureCredential());
+			var searchEndpoint = configuration["SearchEndpoint"];
+            var searchApiKey = keyVaultClient.GetSecret("ai-search-key").Value.Value;
+            var searchIndexName = configuration["AzureSearchIndex"] ?? "recipe-index-new";
 
-            if (string.IsNullOrEmpty(endpoint) || string.IsNullOrEmpty(apiKey))
+            if (string.IsNullOrEmpty(searchEndpoint) || string.IsNullOrEmpty(searchApiKey))
             {
                 _logger.LogWarning("Azure Search configuration is missing. Search functionality will be limited.");
                 // In production, you might want to throw an exception here
@@ -40,7 +40,7 @@ namespace NutriMind.Api.Services
                 return;
             }
 
-            _searchClient = new SearchClient(new Uri(endpoint), indexName, new AzureKeyCredential(apiKey));
+            _searchClient = new SearchClient(new Uri(searchEndpoint), searchIndexName, new AzureKeyCredential(searchApiKey));
         }
 
         public async Task<List<Recipe>> SearchRecipesAsync(string query, Dictionary<string, object>? filters = null, int maxResults = 20)
@@ -77,12 +77,12 @@ namespace NutriMind.Api.Services
                                     filterExpressions.Add("is_keto eq true");
                                 break;
                             case "isdiabeticfriendly":
-                                if (filter.Value is bool isDiabetic && isDiabetic)
+                                if (filter.Value is bool isDiabeticFriendly && isDiabeticFriendly)
                                     filterExpressions.Add("is_diabetic_friendly eq true");
                                 break;
                             case "maxcalories":
-                                if (filter.Value is int maxCal)
-                                    filterExpressions.Add($"calories le {maxCal}");
+                                if (filter.Value is int maxCalories)
+                                    filterExpressions.Add($"calories le {maxCalories}");
                                 break;
                             case "cuisine":
                                 if (filter.Value is string cuisine)

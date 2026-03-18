@@ -199,15 +199,15 @@ namespace NutriMind.Api.Services
 
             if (mealPlan.DailyMeals != null)
             {
-                foreach (var kvp in mealPlan.DailyMeals)
+                foreach (var dailyMealEntry in mealPlan.DailyMeals)
                 {
-                    if (DateTime.TryParse(kvp.Key, out var mealDate))
+                    if (DateTime.TryParse(dailyMealEntry.Key, out var mealDate))
                     {
-                        var dailyMeal = kvp.Value;
+                        var dailyMeal = dailyMealEntry.Value;
 
                         // Create reminders for each meal
                         int timeIndex = 0;
-                        foreach (var mealKvp in dailyMeal.Meals)
+                        foreach (var mealEntry in dailyMeal.Meals)
                         {
                             if (timeIndex < reminderTimes.Count)
                             {
@@ -218,8 +218,8 @@ namespace NutriMind.Api.Services
                                     UserId = userProfile.UserId,
                                     MealPlanId = mealPlan.Id,
                                     Type = "meal_reminder",
-                                    MealType = mealKvp.Key,
-                                    RecipeName = mealKvp.Value.Recipe.Name,
+                                    MealType = mealEntry.Key,
+                                    RecipeName = mealEntry.Value.Recipe.Name,
                                     ScheduledTime = mealDate.Date.Add(mealTime),
                                     IsActive = true,
                                     CreatedAt = DateTime.UtcNow

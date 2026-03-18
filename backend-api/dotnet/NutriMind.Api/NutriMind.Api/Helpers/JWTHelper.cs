@@ -136,27 +136,27 @@ namespace NutriMind.Api.Helpers
         public static DateTime GetMondayOfWeek(string weekIdentifier)
         {
             // Parse format: YYYY-Www (e.g., 2025-W37)
-            var parts = weekIdentifier.Split('-');
-            if (parts.Length != 2 || !parts[1].StartsWith('W'))
+            var weekIdentifierParts = weekIdentifier.Split('-');
+            if (weekIdentifierParts.Length != 2 || !weekIdentifierParts[1].StartsWith('W'))
                 throw new ArgumentException("Invalid week identifier format. Expected YYYY-Www");
 
-            if (!int.TryParse(parts[0], out int year) || !int.TryParse(parts[1][1..], out int week))
+            if (!int.TryParse(weekIdentifierParts[0], out int year) || !int.TryParse(weekIdentifierParts[1][1..], out int week))
                 throw new ArgumentException("Invalid week identifier format");
 
-            var jan1 = new DateTime(year, 1, 1);
-            var daysOffset = DayOfWeek.Thursday - jan1.DayOfWeek;
-            var firstThursday = jan1.AddDays(daysOffset);
-            var cal = System.Globalization.CultureInfo.CurrentCulture.Calendar;
-            var firstWeek = cal.GetWeekOfYear(firstThursday, System.Globalization.CalendarWeekRule.FirstFourDayWeek, DayOfWeek.Monday);
+            var januaryFirst = new DateTime(year, 1, 1);
+            var daysOffset = DayOfWeek.Thursday - januaryFirst.DayOfWeek;
+            var firstThursday = januaryFirst.AddDays(daysOffset);
+            var gregorianCalendar = System.Globalization.CultureInfo.CurrentCulture.Calendar;
+            var firstIsoWeekNumber = gregorianCalendar.GetWeekOfYear(firstThursday, System.Globalization.CalendarWeekRule.FirstFourDayWeek, DayOfWeek.Monday);
             
-            var weekNum = week;
-            if (firstWeek <= 1)
+            var adjustedWeekNumber = week;
+            if (firstIsoWeekNumber <= 1)
             {
-                weekNum -= 1;
+                adjustedWeekNumber -= 1;
             }
             
-            var result = firstThursday.AddDays(weekNum * 7);
-            return result.AddDays(-3); // Go back to Monday
+            var mondayOfWeek = firstThursday.AddDays(adjustedWeekNumber * 7);
+            return mondayOfWeek.AddDays(-3); // Go back to Monday
         }
 
         public static bool IsValidWeekIdentifier(string weekIdentifier)

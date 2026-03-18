@@ -45,12 +45,12 @@ namespace NutriMind.Api.Services
         {
             _logger = logger;
 			var keyVaultUri = configuration["KeyVaultUri"];
-			var kvClient = new SecretClient(new Uri(keyVaultUri), new DefaultAzureCredential());
-			var endpoint = kvClient.GetSecret("openai-endpoint").Value.Value; 
-            var apiKey = kvClient.GetSecret("openai-api-key").Value.Value;
+			var keyVaultClient = new SecretClient(new Uri(keyVaultUri), new DefaultAzureCredential());
+			var openAiEndpoint = keyVaultClient.GetSecret("openai-endpoint").Value.Value; 
+            var apiKey = keyVaultClient.GetSecret("openai-api-key").Value.Value;
             _deploymentName = configuration["OpenAiDeployment"] ?? "gpt-5-mini";
 
-			if (string.IsNullOrEmpty(endpoint) || string.IsNullOrEmpty(apiKey))
+			if (string.IsNullOrEmpty(openAiEndpoint) || string.IsNullOrEmpty(apiKey))
             {
                 _logger.LogWarning("Azure OpenAI configuration is missing. AI functionality will use mock responses.");
                 _openAIClient = null!;
@@ -63,7 +63,7 @@ namespace NutriMind.Api.Services
                 NetworkTimeout = TimeSpan.FromMinutes(5) // 5-minute timeout
             };
 
-            _openAIClient = new AzureOpenAIClient(new Uri(endpoint), new AzureKeyCredential(apiKey), clientOptions);
+            _openAIClient = new AzureOpenAIClient(new Uri(openAiEndpoint), new AzureKeyCredential(apiKey), clientOptions);
 			_chatClient = _openAIClient.GetChatClient(_deploymentName);
 		}
 
@@ -82,8 +82,8 @@ namespace NutriMind.Api.Services
                     new UserChatMessage(userPrompt)
                 };
                 ChatCompletion completion = await _chatClient.CompleteChatAsync(messages);
-                string response = completion.Content[0].Text.Trim();
-                return response;
+                string chatResponseText = completion.Content[0].Text.Trim();
+                return chatResponseText;
             }
             catch (Exception ex)
             {
@@ -436,21 +436,21 @@ MANDATORY REQUIREMENTS:
             };
 
             // Convert daily plans (this is simplified - would need recipe lookup in production)
-            foreach (var kvp in aiResponse.WeeklyPlan)
+            foreach (var dayEntry in aiResponse.WeeklyPlan)
             {
                 var dayPlan = new DailyMealPlan
                 {
-                    Date = mealPlan.WeekOf.AddDays(GetDayOffset(kvp.Key)),
-                    DayOfWeek = kvp.Key
+                    Date = mealPlan.WeekOf.AddDays(GetDayOffset(dayEntry.Key)),
+                    DayOfWeek = dayEntry.Key
                 };
 
                 // This would typically involve looking up recipes and calculating nutrition
                 // For demo purposes, using placeholder data
-                dayPlan.Meals["breakfast"] = CreateMealFromReference(kvp.Value.Breakfast, "breakfast");
-                dayPlan.Meals["lunch"] = CreateMealFromReference(kvp.Value.Lunch, "lunch");
-                dayPlan.Meals["dinner"] = CreateMealFromReference(kvp.Value.Dinner, "dinner");
+                dayPlan.Meals["breakfast"] = CreateMealFromReference(dayEntry.Value.Breakfast, "breakfast");
+                dayPlan.Meals["lunch"] = CreateMealFromReference(dayEntry.Value.Lunch, "lunch");
+                dayPlan.Meals["dinner"] = CreateMealFromReference(dayEntry.Value.Dinner, "dinner");
 
-                mealPlan.DailyMeals[kvp.Key] = dayPlan;
+                mealPlan.DailyMeals[dayEntry.Key] = dayPlan;
             }
 
             return mealPlan;
@@ -552,7 +552,7 @@ MANDATORY REQUIREMENTS:
 
         private string GenerateMockMealPlan(UserProfile userProfile, List<Recipe> candidateRecipes)
         {
-            var targetCals = userProfile.TargetCalories > 0 ? userProfile.TargetCalories : 2000;
+            var targetCalories = userProfile.TargetCalories > 0 ? userProfile.TargetCalories : 2000;
             var userId = userProfile.UserId ?? "demo-user";
             
             // Generate a realistic mock meal plan that matches the expected schema for ALL 7 DAYS
