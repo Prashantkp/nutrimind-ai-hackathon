@@ -30,20 +30,20 @@ namespace NutriMind.Api.Services
         public async Task<MealPlan> GetMealPlanAsync(string mealPlanId)
         {
             return await _context.MealPlans
-                .FirstOrDefaultAsync(m => m.Id == mealPlanId);
+                .FirstOrDefaultAsync(mealPlan => mealPlan.Id == mealPlanId);
         }
 
         public async Task<MealPlan?> GetMealPlanAsync(string userId, string mealPlanId)
         {
             return await _context.MealPlans
-                .FirstOrDefaultAsync(m => m.Id == mealPlanId && m.UserId == userId);
+                .FirstOrDefaultAsync(mealPlan => mealPlan.Id == mealPlanId && mealPlan.UserId == userId);
         }
 
         public async Task<List<MealPlan>> GetUserMealPlansAsync(string userId)
         {
             return await _context.MealPlans
-                .Where(m => m.UserId == userId)
-                .OrderByDescending(m => m.CreatedAt)
+                .Where(mealPlan => mealPlan.UserId == userId)
+                .OrderByDescending(mealPlan => mealPlan.CreatedAt)
                 .ToListAsync();
         }
 
@@ -51,8 +51,8 @@ namespace NutriMind.Api.Services
         {
             var currentWeek = GetCurrentWeekIdentifier();
             return await _context.MealPlans
-                .Where(m => m.UserId == userId && m.WeekIdentifier == currentWeek)
-                .OrderByDescending(m => m.CreatedAt)
+                .Where(mealPlan => mealPlan.UserId == userId && mealPlan.WeekIdentifier == currentWeek)
+                .OrderByDescending(mealPlan => mealPlan.CreatedAt)
                 .FirstOrDefaultAsync();
         }
 
@@ -76,7 +76,7 @@ namespace NutriMind.Api.Services
         public async Task<MealPlan> UpdateMealPlanAsync(MealPlan mealPlan)
         {
             var existingPlan = await _context.MealPlans
-                .FirstOrDefaultAsync(m => m.Id == mealPlan.Id);
+                .FirstOrDefaultAsync(plan => plan.Id == mealPlan.Id);
 
             if (existingPlan == null)
                 throw new InvalidOperationException("Meal plan not found");
@@ -98,7 +98,7 @@ namespace NutriMind.Api.Services
         public async Task DeleteMealPlanAsync(string mealPlanId)
         {
             var mealPlan = await _context.MealPlans
-                .FirstOrDefaultAsync(m => m.Id == mealPlanId);
+                .FirstOrDefaultAsync(plan => plan.Id == mealPlanId);
 
             if (mealPlan != null)
             {
@@ -110,8 +110,8 @@ namespace NutriMind.Api.Services
         public async Task<List<MealPlan>> GetMealPlansByWeekAsync(string userId, string weekIdentifier)
         {
             return await _context.MealPlans
-                .Where(m => m.UserId == userId && m.WeekIdentifier == weekIdentifier)
-                .OrderByDescending(m => m.CreatedAt)
+                .Where(mealPlan => mealPlan.UserId == userId && mealPlan.WeekIdentifier == weekIdentifier)
+                .OrderByDescending(mealPlan => mealPlan.CreatedAt)
                 .ToListAsync();
         }
 

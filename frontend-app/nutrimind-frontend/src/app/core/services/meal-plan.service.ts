@@ -201,11 +201,11 @@ export class MealPlanService {
     if (!match) return null;
     
     const year = parseInt(match[1]);
-    const weekNum = parseInt(match[2]);
+    const weekNumber = parseInt(match[2]);
     
     const startOfYear = new Date(year, 0, 1);
     const startDate = new Date(startOfYear);
-    startDate.setDate(startOfYear.getDate() + ((weekNum - 1) * 7) - startOfYear.getDay() + 1);
+    startDate.setDate(startOfYear.getDate() + ((weekNumber - 1) * 7) - startOfYear.getDay() + 1);
     
     const endDate = new Date(startDate);
     endDate.setDate(startDate.getDate() + 6);

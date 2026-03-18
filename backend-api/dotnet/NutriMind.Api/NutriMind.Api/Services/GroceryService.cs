@@ -25,14 +25,14 @@ namespace NutriMind.Api.Services
         public async Task<GroceryList?> GetGroceryListAsync(string mealPlanId)
         {
             var mealPlan = await _context.MealPlans
-                .FirstOrDefaultAsync(m => m.Id == mealPlanId);
+                .FirstOrDefaultAsync(plan => plan.Id == mealPlanId);
             return mealPlan?.GroceryList;
         }
 
         public async Task<GroceryList> UpdateGroceryListAsync(string mealPlanId, GroceryList groceryList)
         {
             var mealPlan = await _context.MealPlans
-                .FirstOrDefaultAsync(m => m.Id == mealPlanId);
+                .FirstOrDefaultAsync(plan => plan.Id == mealPlanId);
 
             if (mealPlan == null)
                 throw new InvalidOperationException("Meal plan not found");
@@ -49,7 +49,7 @@ namespace NutriMind.Api.Services
         public async Task<GroceryList> GenerateGroceryListFromMealPlanAsync(string mealPlanId)
         {
             var mealPlan = await _context.MealPlans
-                .FirstOrDefaultAsync(m => m.Id == mealPlanId);
+                .FirstOrDefaultAsync(plan => plan.Id == mealPlanId);
 
             if (mealPlan == null)
                 throw new InvalidOperationException("Meal plan not found");
