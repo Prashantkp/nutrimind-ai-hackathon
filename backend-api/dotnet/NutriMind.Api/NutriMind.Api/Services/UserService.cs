@@ -66,7 +66,7 @@ namespace NutriMind.Api.Services
                 await _context.SaveChangesAsync();
 
                 // Generate JWT token
-                var token = _authService.GenerateToken(user.Id, user.Email);
+                var token = _authService.GenerateToken(user.Id, user.Email, user.IsAdmin);
                 var expiresAt = DateTime.UtcNow.AddHours(1);
 
                 var authResponse = new AuthResponse
@@ -132,7 +132,7 @@ namespace NutriMind.Api.Services
                 await _context.SaveChangesAsync();
 
                 // Generate JWT token
-                var token = _authService.GenerateToken(user.Id, user.Email);
+                var token = _authService.GenerateToken(user.Id, user.Email, user.IsAdmin);
                 var expiresAt = DateTime.UtcNow.AddHours(1);
 
                 // Check if user has profile
@@ -193,7 +193,7 @@ namespace NutriMind.Api.Services
 
                 await _context.SaveChangesAsync();
 
-                var token = _authService.GenerateToken(user.Id, user.Email);
+                var token = _authService.GenerateToken(user.Id, user.Email, user.IsAdmin);
                 var expiresAt = DateTime.UtcNow.AddHours(1);
 
                 // Check if user has profile
@@ -286,6 +286,7 @@ namespace NutriMind.Api.Services
                 LastName = user.LastName,
                 PhoneNumber = user.PhoneNumber,
                 IsEmailVerified = user.IsEmailVerified,
+                IsAdmin = user.IsAdmin,
                 CreatedAt = user.CreatedAt,
                 LastLoginAt = user.LastLoginAt
             };

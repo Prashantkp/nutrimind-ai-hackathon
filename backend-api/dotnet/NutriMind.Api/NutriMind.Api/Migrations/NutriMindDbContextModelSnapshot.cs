@@ -186,6 +186,9 @@ namespace NutriMind.Api.Migrations
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
 
+                    b.Property<bool>("IsAdmin")
+                        .HasColumnType("bit");
+
                     b.Property<bool>("IsEmailVerified")
                         .HasColumnType("bit");
 

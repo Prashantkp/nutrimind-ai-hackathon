@@ -59,6 +59,7 @@ namespace NutriMind.Api.Models.DTOs
         public string? PhoneNumber { get; set; }
         public bool IsEmailVerified { get; set; }
         public bool HasProfile { get; set; } = false;
+        public bool IsAdmin { get; set; } = false;
         public DateTime CreatedAt { get; set; }
         public DateTime? LastLoginAt { get; set; }
     }

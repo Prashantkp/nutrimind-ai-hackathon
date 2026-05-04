@@ -93,6 +93,12 @@ namespace NutriMind.Api.Helpers
             return principal?.FindFirst(ClaimTypes.Email)?.Value;
         }
 
+        public string? GetRoleFromToken(string token)
+        {
+            var principal = ValidateToken(token);
+            return principal?.FindFirst(ClaimTypes.Role)?.Value;
+        }
+
         public bool IsTokenExpired(string token)
         {
             try

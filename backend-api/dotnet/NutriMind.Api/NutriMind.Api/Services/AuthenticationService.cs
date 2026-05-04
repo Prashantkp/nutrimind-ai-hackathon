@@ -6,12 +6,13 @@ namespace NutriMind.Api.Services
 {
     public interface IAuthService
     {
-        string GenerateToken(string userId, string email);
+        string GenerateToken(string userId, string email, bool isAdmin = false);
         string GenerateRefreshToken();
         ClaimsPrincipal? ValidateToken(string token);
         string? GetUserIdFromRequest(Microsoft.Azure.Functions.Worker.Http.HttpRequestData request);
         string? GetUserIdFromClaims(ClaimsPrincipal principal);
         bool IsAuthenticated(Microsoft.Azure.Functions.Worker.Http.HttpRequestData request);
+        bool IsAdminFromRequest(Microsoft.Azure.Functions.Worker.Http.HttpRequestData request);
     }
 
     public class AuthService : IAuthService
@@ -27,9 +28,12 @@ namespace NutriMind.Api.Services
             _jwtHelper = new JWTHelper(secretKey, issuer, audience);
         }
 
-        public string GenerateToken(string userId, string email)
+        public string GenerateToken(string userId, string email, bool isAdmin = false)
         {
-            return _jwtHelper.GenerateToken(userId, email);
+            var additionalClaims = isAdmin
+                ? new Dictionary<string, string> { [System.Security.Claims.ClaimTypes.Role] = "admin" }
+                : null;
+            return _jwtHelper.GenerateToken(userId, email, additionalClaims);
         }
 
         public string GenerateRefreshToken()
@@ -62,6 +66,18 @@ namespace NutriMind.Api.Services
         {
             var userId = GetUserIdFromRequest(request);
             return !string.IsNullOrEmpty(userId);
+        }
+
+        public bool IsAdminFromRequest(Microsoft.Azure.Functions.Worker.Http.HttpRequestData request)
+        {
+            var authHeader = request.Headers.FirstOrDefault(h => h.Key.ToLower() == "authorization").Value?.FirstOrDefault();
+
+            if (string.IsNullOrEmpty(authHeader) || !authHeader.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
+                return false;
+
+            var token = authHeader["Bearer ".Length..].Trim();
+            var role = _jwtHelper.GetRoleFromToken(token);
+            return string.Equals(role, "admin", StringComparison.OrdinalIgnoreCase);
         }
     }
 }
