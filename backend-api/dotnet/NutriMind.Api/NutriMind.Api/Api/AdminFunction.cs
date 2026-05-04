@@ -59,7 +59,7 @@ namespace NutriMind.Api.Api
                 int bytesRead;
                 long totalBytesRead = 0;
 
-                while ((bytesRead = await req.Body.ReadAsync(buffer, 0, buffer.Length)) > 0)
+                while ((bytesRead = await req.Body.ReadAsync(buffer.AsMemory())) > 0)
                 {
                     totalBytesRead += bytesRead;
                     if (totalBytesRead > MaxFileSizeBytes)
@@ -114,9 +114,10 @@ namespace NutriMind.Api.Api
             if (data[0] == 0x50 && data[1] == 0x4B && data[2] == 0x03 && data[3] == 0x04)
                 return true;
 
-            // .xls — Compound Document File Format: D0 CF 11 E0
+            // .xls — Compound Document File Format: D0 CF 11 E0 A1 B1 1A E1
             if (data.Length >= 8 &&
-                data[0] == 0xD0 && data[1] == 0xCF && data[2] == 0x11 && data[3] == 0xE0)
+                data[0] == 0xD0 && data[1] == 0xCF && data[2] == 0x11 && data[3] == 0xE0 &&
+                data[4] == 0xA1 && data[5] == 0xB1 && data[6] == 0x1A && data[7] == 0xE1)
                 return true;
 
             return false;
